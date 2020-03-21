@@ -11,7 +11,8 @@ class Watcher:
     + fetch chats in buffer at any time.
     + block and unblock the specified user.
 
-    *LiveChat object derives from pytchat(https://github.com/taizan-hokuto/pytchat).
+    Note:LiveChat object derives from 
+     pytchat(https://github.com/taizan-hokuto/pytchat).
     '''
     def __init__(self, video_id, seektime = -1):
         self._video_id = video_id
