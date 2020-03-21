@@ -9,9 +9,6 @@ You can concentrate on thinking block algorithms.<br>
 Function around livechat is based on my [pytchat](https://github.com/taizan-hokuto/pytchat) script.
 <br>
 <br>
-（これは開発中のプロジェクトです）<br>
-Pytblockerの目標は、様々な制限に縛られることなく、開発者が、自動ブロッキングアルゴリズムの実装に専念できるよう<br>
-スパムbotのブロックを簡便に行える機能を提供することです。<br>
 
 ## Features (goal):
 + Functions focused on blocks, light weight, easy operation.
