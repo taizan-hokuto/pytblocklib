@@ -8,10 +8,20 @@ class Watcher:
 
     It can:
     + collect chat data in the background and store them in buffer.
-    + fetch chats in buffer at any time.
+    + fetch chats from buffer at any time (get() function) .
     + block and unblock the specified user.
 
-    *LiveChat object derives from pytchat(https://github.com/taizan-hokuto/pytchat).
+    Note: LiveChat object derives from 
+     pytchat(https://github.com/taizan-hokuto/pytchat).
+
+    Parameters
+    ----------
+    video_id : str :
+    seektime : int :
+        Unit:seconds.
+        Start position of fetching chat data.
+        If negative value, try to fetch chat data
+        posted before broadcast start.
     '''
     def __init__(self, video_id, seektime = -1):
         self._video_id = video_id
@@ -21,6 +31,7 @@ class Watcher:
         self._first_run = True
         self._tokenlist = TokenList()
         self._seektime = seektime
+
     def start(self):
         if self._first_run:
             self._first_run = False
@@ -54,6 +65,7 @@ class Watcher:
 
     def _no_livechat(self):
         if self._first_run:
-            print("ライブチャットが設定されていません。最初にstart([動画ID])を呼び出す必要があります。")
+            print("ライブチャットが設定されていません。"
+                  "最初にstart([動画ID])を呼び出す必要があります。")
             return True
         return False

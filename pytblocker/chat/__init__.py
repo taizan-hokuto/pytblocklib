@@ -1,6 +1,3 @@
-
-from .api import (
-    config,
-    LiveChat,
-    DefaultProcessor
-)
+from . import config
+from .core_multithread.livechat import LiveChat
+from .processors.default.processor import DefaultProcessor
