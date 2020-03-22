@@ -104,7 +104,8 @@ class Blocker:
         '''
 
         if author_id in self.blocked_list:
-            return (f"{author_id}はすでにブロックリストに存在します。")
+            self._logger.info(f"{author_id}はすでにブロックリストに存在します。")
+            return False
             
         #fetch session_token from tokenlist by authorChannelId
         _token = self.tokens.get_token(author_id)
@@ -130,8 +131,8 @@ class Blocker:
                 sej_unblock = get_item(resp, sejpath_unblock)
                 self._add_blockedlist(sej_unblock, author_id, _token)
                 return get_item(resp, sejpath_response_block_success)
-
-        return "ブロックできませんでした。"
+        self._logger.info("ブロックできませんでした。")
+        return False
 
     def _add_blockedlist(self,sej_unblock, author_id, _token):
         self.blocked_list[author_id] = {"sej_unblock":sej_unblock, "token":_token}
@@ -151,13 +152,15 @@ class Blocker:
 
     def unblock(self, author_id):
         if author_id not in self.blocked_list:
-            return f"{author_id}はブロック済みリストに存在しません。"
+            self._logger.info(f"{author_id}はブロック済みリストに存在しません。")
+            return False
         
         sej_unblock = self.blocked_list[author_id].get("sej_unblock")
         _token = self.blocked_list[author_id].get("token")
         
         if sej_unblock is None or _token is None:
-            return "パラメータの復元に失敗しました"
+            self._logger.info("パラメータの復元に失敗しました")
+            return False
         
         resp = self._postparams(
             sej_unblock, _token.token.csn, _token.token.xsrf_token
@@ -165,8 +168,10 @@ class Blocker:
         resp = json.loads(resp.text)
         if resp.get("code") == "SUCCESS":
             self._del_blockedlist(author_id)
-            return get_item(resp, sejpath_response_unblock_success)
-        return "ブロック解除できませんでした。"
+            self._logger.info(get_item(resp, sejpath_response_unblock_success))
+            return True
+        self._logger.info("ブロック解除できませんでした。")
+        return False
         
 
     def _postparams(self, sej, csn, xsrf_token):
