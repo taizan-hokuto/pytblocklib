@@ -3,6 +3,7 @@ import json
 import re
 import time
 import urllib
+from ..chat import config
 from ..chat.tokenlist import TokenList, Token
 from ..http.request import HttpRequest
 from ..util import get_item
@@ -68,12 +69,13 @@ class Blocker:
     Block authority depends on browser cookie.
     (Current version Chrome only)
     """
-    def __init__(self, req: HttpRequest, tokenlist:TokenList):
+    def __init__(self, req: HttpRequest, tokenlist:TokenList,
+                logger = config.logger(__name__),):
         self.request = req
         self.blocked_list = {}
         self.unblocked_list = {}
         self.tokens = tokenlist
-       
+        self._logger = logger
     def _getContextMenuJson(self, params):
         url = f"https://www.youtube.com/live_chat/get_live_chat_item_context_menu?params={params}&pbj=1"
         resp = self.request.get(url=url)
@@ -108,45 +110,43 @@ class Blocker:
         _token = self.tokens.get_token(author_id)
 
         contextMenuJson = self._getContextMenuJson(_token.chat_param)
-        serviceEndPoint = self._getServiceEndPointListener(contextMenuJson)
 
         '''Even if the `owner` (streamer) or moderator try to block someone
         in the broadcast, the structure of contextMenuJson is diffrent and 
         fail to parse. So we retry to parse the JSON with different path.
         '''
-        if serviceEndPoint is None:
-            serviceEndPoint = self._getServiceEndPointAuthor(contextMenuJson)
+        serviceEndPoint = (
+            self._getServiceEndPointListener(contextMenuJson) or 
+            self._getServiceEndPointAuthor(contextMenuJson) or
+            self._getServiceEndPointAuthorAlt(contextMenuJson)
+        )
 
-        if serviceEndPoint is None:
-            serviceEndPoint = self._getServiceEndPointAuthorAlter(contextMenuJson)
+        if serviceEndPoint:
+            resp = self._postparams(
+                serviceEndPoint, _token.token.csn, _token.token.xsrf_token)
+            resp = json.loads(resp.text)
+            if resp.get("code") == "SUCCESS":
+                #Stores params required for unblocking.
+                sej_unblock = get_item(resp, sejpath_unblock)
+                self._add_blockedlist(sej_unblock, author_id, _token)
+                return get_item(resp, sejpath_response_block_success)
 
-        if serviceEndPoint is None:
-            return "Cannot get contextMenuJSON_Author"
-
-        resp = self._postparams(
-            serviceEndPoint, _token.token.csn, _token.token.xsrf_token)
-        resp = json.loads(resp.text)
-        if resp.get("code") == "SUCCESS":
-            #Stores params required for unblocking.
-            sej_unblock = get_item(resp, sejpath_unblock)
-            self._add_blockedlist(sej_unblock, author_id, _token)
-            return get_item(resp, sejpath_response_block_success)
         return "ブロックできませんでした。"
 
     def _add_blockedlist(self,sej_unblock, author_id, _token):
         self.blocked_list[author_id] = {"sej_unblock":sej_unblock, "token":_token}
-        return f"{author_id}をブロックリストに追加しました"
+        self._logger.debug(f"{author_id}をブロックリストに追加しました")
     
     def _del_blockedlist(self,author_id):
             result = self.blocked_list.pop(author_id)
             if result:
-                return f"ブロックリストから{author_id}を削除しました。"
+                self._logger(f"ブロックリストから{author_id}を削除しました。")
             else:
-                return f"ブロックリストに存在しないid{author_id}を削除しようとしました。"
+                self._logger(f"ブロックリストに存在しないid{author_id}を削除しようとしました。")
 
     def _add_unblockedlist(self,author_id):
         self.unblocked_list[author_id] = 1
-        return f"{author_id}をブロック解除リストに追加しました"
+        self._logger(f"{author_id}をブロック解除リストに追加しました")
         
 
     def unblock(self, author_id):
