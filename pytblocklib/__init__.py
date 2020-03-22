@@ -1,5 +1,5 @@
 """
-pytblocker is a python library for blocking youtube spam bots without using yt api, Selenium, or BeautifulSoup.
+pytblocklib is a python library for blocking youtube spam bots without using yt api, Selenium, or BeautifulSoup.
 """
 __copyright__    = 'Copyright (C) 2020 taizan-hokuto'
 __version__      = '0.0.1'

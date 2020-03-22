@@ -1,10 +1,10 @@
-# pytblocker
+# pytblocklib
 ## Overview
 ( **This project is under development.** )<br>
-Pytblocker is an engine for blocking spam bots on YouTube.
+pytblocklib is an engine for blocking spam bots on YouTube.
 
 ## Description
-Pytblockers's goal is to provide easy blocking and unblocking operation on YT.<br>
+pytblocklibs's goal is to provide easy blocking and unblocking operation on YT.<br>
 You can concentrate on thinking block algorithms.<br>
 Function around livechat is based on my [pytchat](https://github.com/taizan-hokuto/pytchat) script.
 <br>
@@ -16,7 +16,7 @@ Function around livechat is based on my [pytchat](https://github.com/taizan-hoku
 
 ## Usage
 ```python
-from pytblocker import Watcher
+from pytblocklib import Watcher
 import time
 
 w = Watcher("video_id")
@@ -75,7 +75,7 @@ w.stop()
 + + Only srteamers can block spams on their broadcasting with owner/moderator privileges, not per listener.
 
 
-### Pytblocker (Goal)
+### pytblocklib (Goal)
 + Pros 
 + + No need for YT API settings.
 + + Simple - functions focused on blocking spams.
