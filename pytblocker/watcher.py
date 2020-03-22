@@ -57,7 +57,7 @@ class Watcher:
         return self._blocker.unblock(author_id)
 
     def loop(self) -> bool:
-        if self._no_livechat(): return
+        if self._no_livechat(): return False
         return self._livechat.is_alive()
 
     def stop(self):
