@@ -7,8 +7,6 @@ from ..chat.tokenlist import TokenList, Token
 from ..http.request import HttpRequest
 from ..util import get_item
 
-
-
 sejpath_listener = [
     "response",
     "liveChatItemContextMenuSupportedRenderers",
@@ -29,6 +27,18 @@ sejpath_author = [
     "serviceEndpoint"
 ]
 
+sejpath_author_alt = [
+    "response",
+    "liveChatItemContextMenuSupportedRenderers",
+    "menuRenderer","items",5,
+    "menuNavigationItemRenderer",
+    "navigationEndpoint",
+    "authServiceDialogEndpoint",
+    "interface","authServiceDialogRenderer",
+    "applyButton","buttonRenderer",
+    "serviceEndpoint"
+]
+
 sejpath_unblock = [
     "data","actions",0,
     "liveChatAddToToastAction","item",
@@ -44,13 +54,14 @@ sejpath_response_block_success = [
     "responseText","simpleText"
 ]
 
-
 sejpath_response_unblock_success = [
     "data","actions",0,
     "liveChatAddToToastAction","item",
     "notificationTextRenderer",
     "successResponseText","simpleText"
 ]
+
+
 class Blocker:
     """
     Blocker blocks specified YouTube chatter.
@@ -74,6 +85,10 @@ class Blocker:
        
     def _getServiceEndPointAuthor(self, context_menu_json):
         serviceEndPoint = get_item(context_menu_json, sejpath_author)
+        return serviceEndPoint
+
+    def _getServiceEndPointAuthorAlt(self, context_menu_json):
+        serviceEndPoint = get_item(context_menu_json, sejpath_author_alt)
         return serviceEndPoint
 
     def block(self, author_id):
@@ -101,6 +116,12 @@ class Blocker:
         '''
         if serviceEndPoint is None:
             serviceEndPoint = self._getServiceEndPointAuthor(contextMenuJson)
+
+        if serviceEndPoint is None:
+            serviceEndPoint = self._getServiceEndPointAuthorAlter(contextMenuJson)
+
+        if serviceEndPoint is None:
+            return "Cannot get contextMenuJSON_Author"
 
         resp = self._postparams(
             serviceEndPoint, _token.token.csn, _token.token.xsrf_token)
