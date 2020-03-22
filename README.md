@@ -38,14 +38,14 @@ while w.loop():
         for ng_word in NG_WORDS:
             if ng_word in chat.message:
                 print("Found :message-`{}` by {} ".format(chat.message, chat.author_name))
-                #Block user.
+                #Block user by specifying author channel id.
                 result = w.block(chat.author_id)
                 print(result)
                 blocklist.append(chat.author_id)
 
     time.sleep(3)
 
-#Example: unblock all blocked users
+#Example: Unblock all blocked users
 for author_id in blocklist:
     result = w.unblock(author_id)
     print(result)
