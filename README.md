@@ -14,46 +14,87 @@ Function around livechat is based on my [pytchat](https://github.com/taizan-hoku
 + Functions focused on blocks, light weight, easy operation.
 + No **S**craping, no **S**elenium, no Beautiful**S**oup.
 
-## VS (competitive solution)
+## Usage
+```python
+from pytblocker import Watcher
+import time
+
+w = Watcher("video_id")
+
+NG_WORDS = ['NG_WORD1','NG_WORD2']
+blocklist = []
+
+w.start()
+
+#Start checking loop
+while w.loop():
+    #Get chat data from buffer
+    chats = w.get_chats()
+
+    if len(chats)==0:
+        continue
+
+    for chat in chats:
+        for ng_word in NG_WORDS:
+            if ng_word in chat.message:
+                print("Found :message-`{}` by {} ".format(chat.message, chat.author_name))
+                #Block user.
+                result = w.block(chat.author_id)
+                print(result)
+                blocklist.append(chat.author_id)
+
+    time.sleep(3)
+
+#Example: unblock all blocked users
+for author_id in blocklist:
+    result = w.unblock(author_id)
+    print(result)
+
+w.stop()
+
+```
+
+## VS
 
 ### [Nightbot](https://nightbot.tv/)
 + Pros 
 + + Sophisticated user interface on browser, integrated functions.
 + + Applicable for Twitch.
-+ + Various blocking setting (blacklist, excess emotes, repetitions etc...)
++ + Various blocking setting (e.g. blacklist, excess emotes, repetitions)
 + + Applicable to Twitch.
 
 + Cons
-+ + Nightbot exercises the block with moderator privileges
-over the program being broadcast.
-not block spams per listener.
++ + Only srteamers can block spams on their broadcasting with moderator privileges, not per listener.
 
 ### [YouTube Studio](https://studio.youtube.com)
 + Pros 
 + + Official features.
-+ + Various blocking setting (Specify channel id, prohibited word etc...)
++ + Various blocking setting (e.g. specify channel id, prohibited words)
 
 + Cons
-+ + It is possible to block only as an author.
-not to block spams per listener, per .
-+ + The setting menu is complicated and messy with other features.
++ + Only srteamers can block spams on their broadcasting with owner/moderator privileges, not per listener.
+
 
 ### Pytblocker (Goal)
 + Pros 
-+ + Functions focused on blocks, light weight, easy operation.
-+ + You can customize the details with a python script.
++ + No need for YT API settings.
++ + Simple - functions focused on blocking spams.
++ + You can customize the blocking algorithm with a python script.
++ + You can block spams as a listener. (not need to give or take moderator privileges)
 
 + Cons
-+ + User interface (For now, planning CUI)
-+ + Portability (python environment). 
-(Compile and distribute as executable?)
++ + Poor user interface. (planning to GUI)
++ + Less portability : requires python environment. (planning to distribute as executable file)
 
 
 ## Requirements
-browser_cookie3
-pytz
-requests
-urllib3
+browser_cookie3<br>
+pytz<br>
+requests<br>
+urllib3<br>
+
+## LICENSE
+GNU GENERAL PUBLIC LICENSE Version 3
 
 
 
