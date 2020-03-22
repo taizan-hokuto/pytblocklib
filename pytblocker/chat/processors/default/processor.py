@@ -1,9 +1,8 @@
 import asyncio
 import time
-
 from .renderer.base import BaseRenderer
 from ... import config
-from ....tokenlist import TokenList, Token, TokenPair
+from ...tokenlist import TokenList, Token, TokenPair
 
 logger = config.logger(__name__)
 

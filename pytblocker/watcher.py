@@ -1,7 +1,7 @@
 from .chat import LiveChat
 from .blocker.blocker import Blocker
 from .http.request import HttpRequest
-from .tokenlist import TokenList, Token
+from .chat.tokenlist import TokenList, Token
 class Watcher:
     '''
     Watcher provides handles for fetching live chat and blocking operations.

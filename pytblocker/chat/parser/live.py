@@ -5,7 +5,7 @@ Parser of live chat JSON.
 """
 
 import json
-from ... tokenlist import Token
+from .. tokenlist import Token
 from .. exceptions import ( 
     ResponseContextError, 
     NoContentsException, 

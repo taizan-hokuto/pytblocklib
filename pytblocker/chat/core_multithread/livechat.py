@@ -7,13 +7,14 @@ import urllib.parse
 from concurrent.futures import CancelledError, ThreadPoolExecutor
 from queue import Queue
 from .buffer import Buffer
-from ..parser.live import Parser
 from .. import config
 from ..exceptions  import ChatParseException,IllegalFunctionCall
 from ..paramgen    import liveparam, arcparam
+from ..parser.live import Parser
 from ..processors.default.processor import DefaultProcessor
+from ..tokenlist import TokenList, Token
 from ...http.request import HttpRequest
-from ...tokenlist import TokenList, Token
+
 
 MAX_RETRY = 10
 
@@ -40,6 +41,7 @@ class LiveChat:
                 ):
         self.video_id  = video_id
         self.req = req
+        self._logger = logger
         self.seektime = seektime
         self.processor = DefaultProcessor(tokenlist)
         self._buffer = buffer
@@ -55,7 +57,7 @@ class LiveChat:
         self._first_fetch = True
         self._fetch_url = "live_chat/get_live_chat?continuation="
         self._topchat_only = topchat_only
-        self._logger = logger
+
 
         LiveChat._logger = logger
         if not LiveChat._setup_finished:

@@ -1,13 +1,13 @@
 
 import json
-import urllib
 import re
 import time
+import urllib
+from ..chat.tokenlist import TokenList, Token
 from ..http.request import HttpRequest
 from ..util import get_item
-import json
-from ..tokenlist import TokenList, Token
-from ..http.request import HttpRequest
+
+
 
 sejpath_listener = [
     "response",
@@ -95,9 +95,9 @@ class Blocker:
         contextMenuJson = self._getContextMenuJson(_token.chat_param)
         serviceEndPoint = self._getServiceEndPointListener(contextMenuJson)
 
-        '''Even if a live broadcaster try to block someone in the broadcast, 
-        the structure of contextMenuJson is diffrent and fail to parse.
-        So we retry to parse the JSON with different path.
+        '''Even if the `owner` (streamer) or moderator try to block someone
+        in the broadcast, the structure of contextMenuJson is diffrent and 
+        fail to parse. So we retry to parse the JSON with different path.
         '''
         if serviceEndPoint is None:
             serviceEndPoint = self._getServiceEndPointAuthor(contextMenuJson)
