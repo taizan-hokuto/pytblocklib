@@ -43,7 +43,7 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.7',        
         'Programming Language :: Python :: 3.8',        
-        'License :: OSI Approved ::GNU General Public License version 3',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)'
     ],
     description="a python library for youtube blocking function.",
     install_requires=_requirements(),
