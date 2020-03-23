@@ -76,6 +76,7 @@ class Blocker:
         self.unblocked_list = {}
         self.tokens = tokenlist
         self._logger = logger
+
     def _getContextMenuJson(self, params):
         url = f"https://www.youtube.com/live_chat/get_live_chat_item_context_menu?params={params}&pbj=1"
         resp = self.request.get(url=url)
@@ -130,12 +131,14 @@ class Blocker:
                 #Stores params required for unblocking.
                 sej_unblock = get_item(resp, sejpath_unblock)
                 self._add_blockedlist(sej_unblock, author_id, _token)
-                return get_item(resp, sejpath_response_block_success)
+                self._logger.info(get_item(resp, sejpath_response_block_success))
+                return True
         self._logger.info("ブロックできませんでした。")
         return False
 
     def _add_blockedlist(self,sej_unblock, author_id, _token):
-        self.blocked_list[author_id] = {"sej_unblock":sej_unblock, "token":_token}
+        block_item = {"sej_unblock":sej_unblock, "token":_token}
+        self.blocked_list[author_id] = block_item
         self._logger.debug(f"{author_id}をブロックリストに追加しました")
     
     def _del_blockedlist(self,author_id):
@@ -172,7 +175,6 @@ class Blocker:
             return True
         self._logger.info("ブロック解除できませんでした。")
         return False
-        
 
     def _postparams(self, sej, csn, xsrf_token):
         params = {
