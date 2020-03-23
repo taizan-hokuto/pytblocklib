@@ -3,7 +3,8 @@ import json
 import requests
 import urllib
 from ..util import get_item
-
+from ..config import config
+import sys
 path_params = [
     "response",
     "responseContext",
@@ -26,8 +27,18 @@ class HttpRequest:
         self.session.cookies = self._get_cookies()
 
     def _get_cookies(self):
-        return browser_cookie3.chrome()
-		
+        try:
+            browser = config.get_env()
+            if browser == '1':
+                return browser_cookie3.chrome(domain_name='youtube.com')
+            elif browser == '2':
+                return browser_cookie3.firefox(domain_name='youtube.com')
+            else:
+                raise Exception("適切なブラウザが見つからないか、設定ファイルが壊れています。")
+        except browser_cookie3.BrowserCookieError:
+            raise Exception("ブラウザのクッキーが見つかりません。"
+        "ChromeかFirefoxでYouTubeにログインしている必要があります。")
+
     def get(self, url) -> requests.Response:
         resp = self.session.get(url, headers=self.headers)
         if self._first_response:

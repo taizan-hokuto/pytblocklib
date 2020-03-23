@@ -36,7 +36,7 @@ class LiveChat:
                 force_replay = False,
                 topchat_only  = False,
                 logger = config.logger(__name__),
-                req = HttpRequest(),
+                req = None,
                 tokenlist = None
                 ):
         self.video_id  = video_id

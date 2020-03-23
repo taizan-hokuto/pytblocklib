@@ -26,7 +26,7 @@ class Watcher:
     '''
     def __init__(self, video_id, seektime = -1):
         self._video_id = video_id
-        self._req = HttpRequest()
+        self._req = None
         self._livechat = None
         self._blocker = None
         self._first_run = True

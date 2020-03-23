@@ -5,7 +5,7 @@ import re
 import time
 import urllib
 from typing import NamedTuple
-from ..chat import config
+from .. import config
 from ..chat.tokenlist import TokenList, Token
 from ..http.request import HttpRequest
 from ..util import get_item
