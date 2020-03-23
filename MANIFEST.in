@@ -1,0 +1,5 @@
+include requirements.txt
+include README.md
+global-exclude pytblocklib/testrun/testrun*.py
+global-exclude log*.txt
+global-exclude blocklst.temp

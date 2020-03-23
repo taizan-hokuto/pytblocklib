@@ -54,6 +54,11 @@ class Watcher:
         return self._blocker.block(author_id)
 
     def unblock(self, author_id:str) -> str:
+        '''
+        The unblock function is available only user blocked 
+        while this script is running. After the script finishes,
+        all parameters required for unblocking are disabled.
+        '''
         if self._no_livechat(): return
         return self._blocker.unblock(author_id)
 
