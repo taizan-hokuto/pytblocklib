@@ -3,6 +3,7 @@ import json
 import os
 import pickle
 import re
+from .. import config
 
 PATTERN  = re.compile(r"(.*)\(([0-9]+)\)$")
 
@@ -14,8 +15,9 @@ class Serializer:
     filepath : str :
         The path of file to save objects.
     '''
-    def __init__(self,filepath):
+    def __init__(self,filepath,logger = config.logger(__name__)):
         self.filepath = filepath
+        self._logger = logger
 
     def _serialize_obj(self,obj) -> str:
         return base64.b64encode(pickle.dumps(obj)).decode("utf-8")
@@ -48,7 +50,7 @@ class Serializer:
             with open(self.filepath, encoding='utf-8', mode='r') as f:
                 return [self._deserilize_obj(line) for line in f]
         except FileNotFoundError:
-            print("File not found:",self.filepath)
+            self._logger.error("ファイルが見つかりません:",self.filepath)
 
     def _checkpath(self, filepath):
         splitter = os.path.splitext(os.path.basename(filepath))

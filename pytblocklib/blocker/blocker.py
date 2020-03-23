@@ -159,29 +159,29 @@ class Blocker:
         self.blocked_list[key] = block_item
         #stores blocked user id and tokens
         self._ser.save(block_item)
-        self._logger.info(f"{key}をブロックリストに追加しました")
+        self._logger.debug(f"{key}をブロックリストに追加しました")
     
     def _del_blockedlist(self,key):
             result = self.blocked_list.pop(key)
             if result:
-                self._logger.info(f"ブロックリストから[{key}]を削除しました。")
+                self._logger.debug(f"ブロックリストから[{key}]を削除しました。")
             else:
-                self._logger.info(f"ブロックリストに存在しないid({key})を削除しようとしました。")
+                self._logger.error(f"ブロックリストに存在しないid({key})を削除しようとしました。")
 
     def _add_unblockedlist(self,key):
         self.unblocked_list[key] = 1
-        self._logger.info(f"{key}をブロック解除リストに追加しました")
+        self._logger.debug(f"{key}をブロック解除リストに追加しました")
 
     def unblock(self, key):
         if key not in self.blocked_list:
-            self._logger.info(f"{key}はブロック済みリストに存在しません。")
+            self._logger.error(f"{key}はブロック済みリストに存在しません。")
             return False
         
         sej_unblock = self.blocked_list[key].sej_unblock
         _token = self.blocked_list[key].token
         
         if sej_unblock is None or _token is None:
-            self._logger.info("パラメータの復元に失敗しました")
+            self._logger.error("パラメータの復元に失敗しました")
             return False
         
         resp = self._postparams(
@@ -192,7 +192,7 @@ class Blocker:
             self._del_blockedlist(key)
             self._logger.info(get_item(resp, sejpath_response_unblock_success))
             return True
-        self._logger.info("セッション切断により自動ブロック解除に失敗しました。手動で解除してください")
+        self._logger.error("セッション切断により自動ブロック解除に失敗しました。手動で解除してください")
         return False
         
     def _load_block_list(self):

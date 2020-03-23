@@ -2,7 +2,7 @@ from .chat import LiveChat
 from .blocker.blocker import Blocker
 from .http.request import HttpRequest
 from .chat.tokenlist import TokenList, Token
-
+from . import config
 class Watcher:
     '''
     Watcher provides handles for fetching live chat and blocking operations.
@@ -24,7 +24,7 @@ class Watcher:
         If negative value, try to fetch chat data
         posted before broadcast start.
     '''
-    def __init__(self, video_id, seektime = -1):
+    def __init__(self, video_id, seektime=-1, logger=config.logger(__name__)):
         self._video_id = video_id
         self._req = None
         self._livechat = None
@@ -32,6 +32,7 @@ class Watcher:
         self._first_run = True
         self._tokenlist = TokenList()
         self._seektime = seektime
+        self._logger = logger
 
     def start(self):
         if self._first_run:
@@ -43,7 +44,7 @@ class Watcher:
                 seektime=self._seektime)
             self._blocker = Blocker(req=self._req, tokenlist=self._tokenlist)
         else:
-            print("すでにチャット取得が開始されています。")
+            self._logger.info("すでにチャット取得が開始されています。")
 
     def get_chats(self):
         if self._no_livechat(): return
@@ -72,7 +73,7 @@ class Watcher:
 
     def _no_livechat(self):
         if self._first_run:
-            print("ライブチャットが設定されていません。"
+            self._logger.info("ライブチャットが設定されていません。"
                   "最初にstart([動画ID])を呼び出す必要があります。")
             return True
         return False

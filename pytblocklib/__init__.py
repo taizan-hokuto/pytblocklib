@@ -8,4 +8,6 @@ __author__       = 'taizan-hokuto'
 __author_email__ = '55448286+taizan-hokuto@users.noreply.github.com'
 __url__          = 'https://github.com/taizan-hokuto/pytblocklib'
 
+RELEASE = True
+
 from .watcher import Watcher
