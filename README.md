@@ -1,19 +1,29 @@
 # pytblocklib
 ## Overview
 ( **This project is under development.** )<br>
-pytblocklib is an engine for blocking spam bots on YouTube.
+Pytblocklib is an library for blocking spam bots on YouTube.
+<br>
+<br>
+
+Pytblocklib は、Youtubeのスパムボットのブロックを補助するライブラリです。<br>
+面倒なAPI設定は不要、リスナー側のブロックにも対応しています。<br>
+詳細は[wiki］(https://github.com/taizan-hokuto/pytblocklib/wiki)を参照してください。
+<br>
+(このプロジェクトは開発中です。YouTubeの仕様変更等により使用できなくなる場合があります。ソースの使用に際しては自己責任でお願いいたします。LICECNSE:GPL 3.0)<br>
 
 ## Description
-pytblocklibs's goal is to provide easy blocking and unblocking operation on YT.<br>
+Pytblocklibs's goal is to provide easy blocking and unblocking operation on YT.<br>
 You can concentrate on thinking block algorithms.<br>
 Function around livechat is based on my [pytchat](https://github.com/taizan-hokuto/pytchat) script.
 <br>
 <br>
 
-## Features (goal):
+## Features:
 + Functions focused on blocks, light weight, easy operation.
++ You can block as a listener. (not need to give or take moderator privileges)
 + No **S**craping, no **S**elenium, no Beautiful**S**oup.
-
+ 
+ 
 ## Usage
 ```python
 from pytblocklib import Watcher
@@ -36,19 +46,18 @@ while w.loop():
 
     for chat in chats:
         for ng_word in NG_WORDS:
-            if ng_word in chat.message:
+            if ng_word in chat.message or ng_word in chat.author_name:
                 print("Found :message-`{}` by {} ".format(chat.message, chat.author_name))
                 #Block user by specifying author channel id.
-                result = w.block(chat.author_id)
-                print(result)
+                w.block(chat.author_id)
                 blocklist.append(chat.author_id)
 
     time.sleep(3)
 
 #Example: Unblock all blocked users
 for author_id in blocklist:
-    result = w.unblock(author_id)
-    print(result)
+    w.unblock(author_id)
+    
 
 w.stop()
 
@@ -75,7 +84,7 @@ w.stop()
 + + Only srteamers can block spams on their broadcasting with owner/moderator privileges, not per listener.
 
 
-### pytblocklib (Goal)
+### Pytblocklib 
 + Pros 
 + + No need for YT API settings.
 + + Simple - functions focused on blocking spams.
@@ -83,7 +92,7 @@ w.stop()
 + + You can block spams as a listener. (not need to give or take moderator privileges)
 
 + Cons
-+ + Poor user interface. (planning to GUI)
++ + Need to implement blocking procedures and user interface separately.
 + + Less portability : requires python environment. (planning to distribute as executable file)
 
 
