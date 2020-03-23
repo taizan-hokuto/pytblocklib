@@ -16,7 +16,7 @@ YouTube API設定不要、リスナー側のブロックにも対応していま
 <br>
 
 ## Description
-Pytblocklibs's goal is to provide easy blocking and unblocking operation on YT.<br>
+Pytblocklibs's goal is to provide easy blocking operation on YT.<br>
 You can concentrate on thinking block algorithms.<br>
 Function around livechat is based on my [pytchat](https://github.com/taizan-hokuto/pytchat) script.
 <br>
@@ -58,7 +58,7 @@ while w.loop():
 
     time.sleep(3)
 
-#Example: Unblock all blocked users
+#Example: Unblock all blocked users (only available during executing script)
 for author_id in blocklist:
     w.unblock(author_id)
     
