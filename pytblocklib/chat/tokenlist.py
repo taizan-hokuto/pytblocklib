@@ -14,7 +14,7 @@ class TokenPair(NamedTuple):
 
 class Token(NamedTuple):
     '''
-    tokens & param for operating chats.
+    `Token` includes `TokenPair` & `chat_param` for operating chats.
     `chat_param` is context menu parameter each chat has.
     '''
     token: TokenPair

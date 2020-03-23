@@ -1,12 +1,15 @@
 
 import json
+import os
 import re
 import time
 import urllib
-from ..chat import config
+from typing import NamedTuple
+from .. import config
 from ..chat.tokenlist import TokenList, Token
 from ..http.request import HttpRequest
 from ..util import get_item
+from .serializer import Serializer
 
 sejpath_listener = [
     "response",
@@ -62,12 +65,19 @@ sejpath_response_unblock_success = [
     "successResponseText","simpleText"
 ]
 
+class BlockItem(NamedTuple):
+    '''
+    BlockItem represents the item of blocked user and token for 
+    unblock.
+    '''
+    key: str
+    sej_unblock : dict
+    token : Token
 
 class Blocker:
     """
-    Blocker blocks specified YouTube chatter.
+    Blocker blocks specified chatter.
     Block authority depends on browser cookie.
-    (Current version Chrome only)
     """
     def __init__(self, req: HttpRequest, tokenlist:TokenList,
                 logger = config.logger(__name__),):
@@ -76,6 +86,14 @@ class Blocker:
         self.unblocked_list = {}
         self.tokens = tokenlist
         self._logger = logger
+        self._ser = None
+        self._setup()
+
+    def _setup(self):
+        if os.path.exists('blocklst.temp'):
+            os.remove('blocklst.temp')
+        self._ser = Serializer('blocklst.temp')
+
     def _getContextMenuJson(self, params):
         url = f"https://www.youtube.com/live_chat/get_live_chat_item_context_menu?params={params}&pbj=1"
         resp = self.request.get(url=url)
@@ -93,21 +111,22 @@ class Blocker:
         serviceEndPoint = get_item(context_menu_json, sejpath_author_alt)
         return serviceEndPoint
 
-    def block(self, author_id):
+    def block(self, key):
         '''
         Block specified listeners's chats.
         
         Parameter
         ---------
-        author_id : str :
+        key : str :
             authorChannelId to block.
         '''
 
-        if author_id in self.blocked_list:
-            return (f"{author_id}はすでにブロックリストに存在します。")
+        if key in self.blocked_list:
+            self._logger.info(f"{key}はすでにブロックリストに存在します。")
+            return False
             
         #fetch session_token from tokenlist by authorChannelId
-        _token = self.tokens.get_token(author_id)
+        _token = self.tokens.get_token(key)
 
         contextMenuJson = self._getContextMenuJson(_token.chat_param)
 
@@ -128,46 +147,59 @@ class Blocker:
             if resp.get("code") == "SUCCESS":
                 #Stores params required for unblocking.
                 sej_unblock = get_item(resp, sejpath_unblock)
-                self._add_blockedlist(sej_unblock, author_id, _token)
-                return get_item(resp, sejpath_response_block_success)
+                self._add_blockedlist(sej_unblock, key, _token)
+                self._logger.info(get_item(resp, sejpath_response_block_success))
+                return True
+        self._logger.info("ブロックできませんでした。")
+        return False
 
-        return "ブロックできませんでした。"
-
-    def _add_blockedlist(self,sej_unblock, author_id, _token):
-        self.blocked_list[author_id] = {"sej_unblock":sej_unblock, "token":_token}
-        self._logger.debug(f"{author_id}をブロックリストに追加しました")
+    def _add_blockedlist(self,sej_unblock, key, _token):
+        #block_item = {"sej_unblock":sej_unblock, "token":_token}
+        block_item = BlockItem(key=key,sej_unblock=sej_unblock, token=_token)
+        self.blocked_list[key] = block_item
+        #stores blocked user id and tokens
+        self._ser.save(block_item)
+        self._logger.debug(f"{key}をブロックリストに追加しました")
     
-    def _del_blockedlist(self,author_id):
-            result = self.blocked_list.pop(author_id)
+    def _del_blockedlist(self,key):
+            result = self.blocked_list.pop(key)
             if result:
-                self._logger(f"ブロックリストから{author_id}を削除しました。")
+                self._logger.debug(f"ブロックリストから[{key}]を削除しました。")
             else:
-                self._logger(f"ブロックリストに存在しないid{author_id}を削除しようとしました。")
+                self._logger.error(f"ブロックリストに存在しないid({key})を削除しようとしました。")
 
-    def _add_unblockedlist(self,author_id):
-        self.unblocked_list[author_id] = 1
-        self._logger(f"{author_id}をブロック解除リストに追加しました")
-        
+    def _add_unblockedlist(self,key):
+        self.unblocked_list[key] = 1
+        self._logger.debug(f"{key}をブロック解除リストに追加しました")
 
-    def unblock(self, author_id):
-        if author_id not in self.blocked_list:
-            return f"{author_id}はブロック済みリストに存在しません。"
+    def unblock(self, key):
+        if key not in self.blocked_list:
+            self._logger.error(f"{key}はブロック済みリストに存在しません。")
+            return False
         
-        sej_unblock = self.blocked_list[author_id].get("sej_unblock")
-        _token = self.blocked_list[author_id].get("token")
+        sej_unblock = self.blocked_list[key].sej_unblock
+        _token = self.blocked_list[key].token
         
         if sej_unblock is None or _token is None:
-            return "パラメータの復元に失敗しました"
+            self._logger.error("パラメータの復元に失敗しました")
+            return False
         
         resp = self._postparams(
             sej_unblock, _token.token.csn, _token.token.xsrf_token
         )
         resp = json.loads(resp.text)
         if resp.get("code") == "SUCCESS":
-            self._del_blockedlist(author_id)
-            return get_item(resp, sejpath_response_unblock_success)
-        return "ブロック解除できませんでした。"
+            self._del_blockedlist(key)
+            self._logger.info(get_item(resp, sejpath_response_unblock_success))
+            return True
+        self._logger.error("セッション切断により自動ブロック解除に失敗しました。手動で解除してください")
+        return False
         
+    def _load_block_list(self):
+        items = self._ser.load()
+        if items is None: return
+        for item in items:
+            self.blocked_list[item.key] = item
 
     def _postparams(self, sej, csn, xsrf_token):
         params = {

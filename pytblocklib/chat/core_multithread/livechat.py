@@ -36,7 +36,7 @@ class LiveChat:
                 force_replay = False,
                 topchat_only  = False,
                 logger = config.logger(__name__),
-                req = HttpRequest(),
+                req = None,
                 tokenlist = None
                 ):
         self.video_id  = video_id
@@ -272,7 +272,7 @@ class LiveChat:
         if self._direct_mode == False:
             #bufferにダミーオブジェクトを入れてis_alive()を判定させる
             self._buffer.put({'chatdata':'','timeout':0}) 
-        self._logger.info(f'[{self.video_id}]finished.')
+        self._logger.info(f'[{self.video_id}]終了しました')
   
     @classmethod
     def shutdown(cls, event, sig = None, handler=None):

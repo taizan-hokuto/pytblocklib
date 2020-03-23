@@ -1,18 +1,23 @@
 from logging import NullHandler, getLogger, StreamHandler, FileHandler, Formatter
 import logging
 from datetime import datetime
-
+from pytblocklib import RELEASE
 
 def get_logger(modname,loglevel=logging.DEBUG):
     logger = getLogger(modname)
     if loglevel == None:
         logger.addHandler(NullHandler())
         return logger
+    if RELEASE:
+        loglevel = logging.INFO
     logger.setLevel(loglevel)
     #create handler1 for showing info
     handler1 = StreamHandler()
-    my_formatter  = MyFormatter()
-    handler1.setFormatter(my_formatter)
+    if RELEASE:
+        formatter  = ReleaseFormatter()
+    else:
+        formatter  = MyFormatter()
+    handler1.setFormatter(formatter)
 
     handler1.setLevel(loglevel) 
     logger.addHandler(handler1)
@@ -20,7 +25,7 @@ def get_logger(modname,loglevel=logging.DEBUG):
     if loglevel <= logging.DEBUG:
         handler2 = FileHandler(filename="log.txt", encoding='utf-8')
         handler2.setLevel(logging.ERROR)
-        handler2.setFormatter(my_formatter)
+        handler2.setFormatter(MyFormatter())
 
 
         logger.addHandler(handler2)
@@ -34,5 +39,11 @@ class MyFormatter(logging.Formatter):
         funcname = (record.funcName).ljust(18)
         lineno = str(record.lineno).rjust(4)
         message = record.getMessage()
+        
+        return '{}| {} ( {}:{}) - {}'.format(
+            timestamp, module, funcname, lineno, message)
 
-        return timestamp+'| '+module+' { '+funcname+':'+lineno+'} - '+message 
+class ReleaseFormatter(logging.Formatter):
+    def format(self, record):
+        return '{}: {}'.format(record.levelname, record.getMessage())
+
