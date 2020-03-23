@@ -2,6 +2,7 @@ from .chat import LiveChat
 from .blocker.blocker import Blocker
 from .http.request import HttpRequest
 from .chat.tokenlist import TokenList, Token
+
 class Watcher:
     '''
     Watcher provides handles for fetching live chat and blocking operations.
@@ -44,7 +45,7 @@ class Watcher:
         else:
             print("すでにチャット取得が開始されています。")
 
-    def get_chats(self) -> list:
+    def get_chats(self):
         if self._no_livechat(): return
         return self._livechat.get()
 
