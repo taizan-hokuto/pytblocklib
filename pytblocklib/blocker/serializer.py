@@ -44,8 +44,11 @@ class Serializer:
         '''
         Load objects. 
         '''
-        with open(self.filepath, encoding='utf-8', mode='r') as f:
-            return [self._deserilize_obj(line) for line in f]
+        try:
+            with open(self.filepath, encoding='utf-8', mode='r') as f:
+                return [self._deserilize_obj(line) for line in f]
+        except FileNotFoundError:
+            print("File not found:",self.filepath)
 
     def _checkpath(self, filepath):
         splitter = os.path.splitext(os.path.basename(filepath))

@@ -1,4 +1,5 @@
 import configparser
+import os
 
 configfile_path = 'config.ini'
 

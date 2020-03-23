@@ -197,6 +197,7 @@ class Blocker:
         
     def _load_block_list(self):
         items = self._ser.load()
+        if items is None: return
         for item in items:
             self.blocked_list[item.key] = item
 
