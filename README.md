@@ -6,10 +6,14 @@ Pytblocklib is an library for blocking spam bots on YouTube.
 <br>
 
 Pytblocklib は、Youtubeのスパムボットのブロックを補助するライブラリです。<br>
-面倒なAPI設定は不要、リスナー側のブロックにも対応しています。<br>
+YouTube API設定不要、リスナー側のブロックにも対応しています。<br>
 詳細は[wiki］(https://github.com/taizan-hokuto/pytblocklib/wiki)を参照してください。
 <br>
-(このプロジェクトは開発中です。YouTubeの仕様変更等により使用できなくなる場合があります。ソースの使用に際しては自己責任でお願いいたします。LICECNSE:GPL 3.0)<br>
++ このプロジェクトは開発中です。
++ YouTubeの仕様変更等により使用できなくなる場合があります。
++ ソースの使用に際しては自己責任でお願いいたします。
++ LICECNSE:GPL3
+<br>
 
 ## Description
 Pytblocklibs's goal is to provide easy blocking and unblocking operation on YT.<br>
