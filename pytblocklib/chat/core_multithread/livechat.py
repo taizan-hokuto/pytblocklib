@@ -100,12 +100,10 @@ class LiveChat:
             parameter for next chat data
         '''
         try:
-            #with requests.Session() as session:
             with self._req.session as session:
                 while(continuation and self._is_alive):
                     continuation = self._check_pause(continuation)
-                    contents = self._get_contents(
-                        continuation, session)
+                    contents = self._get_contents(continuation, session)
                     metadata, chatdata =  self._parser.parse(contents)
                     timeout = metadata['timeoutMs']/1000
                     chat_component = {
@@ -160,8 +158,7 @@ class LiveChat:
                 self._fetch_url = "live_chat_replay/get_live_chat_replay?continuation="
                 continuation = arcparam.getparam(
                     self._video_id, self._seektime, self._topchat_only)
-                livechat_json = ( self._get_livechat_json(
-                    continuation, session))
+                livechat_json = (self._get_livechat_json(continuation, session))
                 reload_continuation = self._parser.reload_continuation(
                     self._parser.get_contents(livechat_json))
                 if reload_continuation:
