@@ -42,11 +42,8 @@ w.start()
 
 #Start checking loop
 while w.loop():
-    #Get chat data from buffer
+    #Get chat list from buffer
     chats = w.get_chats()
-
-    if len(chats)==0:
-        continue
 
     for chat in chats:
         for ng_word in NG_WORDS:

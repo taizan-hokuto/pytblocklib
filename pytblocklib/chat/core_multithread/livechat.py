@@ -6,6 +6,7 @@ import traceback
 import urllib.parse
 from concurrent.futures import CancelledError, ThreadPoolExecutor
 from queue import Queue
+from threading import  Event
 from .buffer import Buffer
 from .. import config
 from ..exceptions  import ChatParseException,IllegalFunctionCall
@@ -32,23 +33,21 @@ class LiveChat:
                 interruptable = True,
                 callback = None,
                 done_callback = None,
-                direct_mode = False,
                 force_replay = False,
                 topchat_only  = False,
                 logger = config.logger(__name__),
                 req = None,
                 tokenlist = None
                 ):
-        self.video_id  = video_id
-        self.req = req
+        self._video_id  = video_id
+        self._req = req
         self._logger = logger
-        self.seektime = seektime
-        self.processor = DefaultProcessor(tokenlist)
+        self._seektime = seektime
+        self._processor = DefaultProcessor(tokenlist)
         self._buffer = buffer
         self._callback = callback
         self._done_callback = done_callback
         self._executor = ThreadPoolExecutor(max_workers=2)
-        self._direct_mode = direct_mode
         self._is_alive   = True
         self._is_replay = force_replay
         self._parser = Parser(is_replay = self._is_replay)
@@ -57,6 +56,7 @@ class LiveChat:
         self._first_fetch = True
         self._fetch_url = "live_chat/get_live_chat?continuation="
         self._topchat_only = topchat_only
+        self._event = Event()
 
 
         LiveChat._logger = logger
@@ -71,17 +71,12 @@ class LiveChat:
 
 
     def _setup(self):
-        if self._direct_mode:
-            if self._callback is None:
-                raise IllegalFunctionCall(
-                    "When direct_mode=True, callback parameter is required.")
+        if self._buffer is None:
+            self._buffer = Buffer(maxsize = 100)
+        if self._callback is None:
+            pass 
         else:
-            if self._buffer is None:
-                self._buffer = Buffer(maxsize = 100)
-            if self._callback is None:
-                pass 
-            else:
-                self._executor.submit(self._callback_loop,self._callback)
+            self._executor.submit(self._callback_loop,self._callback)
         listen_task = self._executor.submit(self._startlisten)
         if self._done_callback is None:
             listen_task.add_done_callback(self.finish)
@@ -93,7 +88,7 @@ class LiveChat:
         """Fetch first continuation parameter,
         create and start _listen loop.
         """
-        initial_continuation = liveparam.getparam(self.video_id,3)
+        initial_continuation = liveparam.getparam(self._video_id,3)
         self._listen(initial_continuation)
 
     def _listen(self, continuation):
@@ -107,40 +102,31 @@ class LiveChat:
             parameter for next chat data
         '''
         try:
-            #with requests.Session() as session:
-            with self.req.session as session:
+            with self._req.session as session:
                 while(continuation and self._is_alive):
                     continuation = self._check_pause(continuation)
-                    contents = self._get_contents(
-                        continuation, session)
+                    contents = self._get_contents(continuation, session)
                     metadata, chatdata =  self._parser.parse(contents)
                     timeout = metadata['timeoutMs']/1000
                     chat_component = {
-                        "video_id" : self.video_id,
+                        "video_id" : self._video_id,
                         "timeout"  : timeout,
                         "chatdata" : chatdata,
                         "tokendict" : metadata.get("tokendict")
                     }
                     time_mark =time.time()
-                    if self._direct_mode:
-                        processed_chat = self.processor.process([chat_component])
-                        if isinstance(processed_chat,tuple):
-                            self._callback(*processed_chat)
-                        else:
-                            self._callback(processed_chat)
-                    else:
-                        self._buffer.put(chat_component)
+                    self._buffer.put(chat_component)
                     diff_time = timeout - (time.time()-time_mark)
-                    time.sleep(diff_time if diff_time > 0 else 0)        
+                    self._event.wait(diff_time if diff_time > 0 else 0)
                     continuation = metadata.get('continuation')  
         except ChatParseException as e:
-            self._logger.debug(f"[{self.video_id}]{str(e)}")
+            self._logger.debug(f"[{self._video_id}]{str(e)}")
             return            
         except (TypeError , json.JSONDecodeError) :
             self._logger.error(f"{traceback.format_exc(limit = -1)}")
             return
         
-        self._logger.debug(f"[{self.video_id}]finished fetching chat.")
+        self._logger.debug(f"[{self._video_id}]finished fetching chat.")
 
     def _check_pause(self, continuation):
         if self._pauser.empty():
@@ -151,7 +137,7 @@ class LiveChat:
             '''
             self._pauser.put_nowait(None)
             if not self._is_replay:
-                continuation = liveparam.getparam(self.video_id,3)
+                continuation = liveparam.getparam(self._video_id,3)
         return continuation
 
     def _get_contents(self, continuation, session):
@@ -173,9 +159,8 @@ class LiveChat:
                 self._parser.is_replay = True
                 self._fetch_url = "live_chat_replay/get_live_chat_replay?continuation="
                 continuation = arcparam.getparam(
-                    self.video_id, self.seektime, self._topchat_only)
-                livechat_json = ( self._get_livechat_json(
-                    continuation, session))
+                    self._video_id, self._seektime, self._topchat_only)
+                livechat_json = (self._get_livechat_json(continuation, session))
                 reload_continuation = self._parser.reload_continuation(
                     self._parser.get_contents(livechat_json))
                 if reload_continuation:
@@ -204,7 +189,7 @@ class LiveChat:
                     time.sleep(1)
                     continue
         else:
-            self._logger.error(f"[{self.video_id}]"
+            self._logger.error(f"[{self._video_id}]"
                     f"Exceeded retry count. status_code={status_code}")
             return None
         return livechat_json
@@ -220,7 +205,7 @@ class LiveChat:
         """
         while self.is_alive():
             items = self._buffer.get()
-            processed_chat = self.processor.process(items)
+            processed_chat = self._processor.process(items)
             if isinstance(processed_chat, tuple):
                 self._callback(*processed_chat)
             else:
@@ -235,7 +220,7 @@ class LiveChat:
         """
         if self._callback is None:
             items = self._buffer.get()
-            return  self.processor.process(items)
+            return  self._processor.process(items)
         raise IllegalFunctionCall(
             "既にcallbackを登録済みのため、get()は実行できません。")
 
@@ -262,20 +247,18 @@ class LiveChat:
         try: 
             self.terminate()
         except CancelledError:
-            self._logger.debug(f'[{self.video_id}]cancelled:{sender}')
+            self._logger.debug(f'[{self._video_id}]cancelled:{sender}')
 
     def terminate(self):
         '''
         Listenerを終了する。
         '''
         self._is_alive = False
-        if self._direct_mode == False:
-            #bufferにダミーオブジェクトを入れてis_alive()を判定させる
-            self._buffer.put({'chatdata':'','timeout':0}) 
-        self._logger.info(f'[{self.video_id}]終了しました')
+        self._logger.info(f'[{self._video_id}]終了しました')
   
     @classmethod
     def shutdown(cls, event, sig = None, handler=None):
         cls._logger.debug("shutdown...")
         for t in LiveChat._listeners:
             t._is_alive = False
+            t._event.set()

@@ -90,6 +90,7 @@ class Blocker:
         self._setup()
 
     def _setup(self):
+        self._logger.debug('test')
         if os.path.exists('blocklst.temp'):
             os.remove('blocklst.temp')
         self._ser = Serializer('blocklst.temp')

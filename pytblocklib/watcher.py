@@ -24,7 +24,8 @@ class Watcher:
         If negative value, try to fetch chat data
         posted before broadcast start.
     '''
-    def __init__(self, video_id, seektime=-1, logger=config.logger(__name__)):
+    def __init__(self, video_id, seektime=-1, logger=config.logger(__name__),
+        interruptable = True):
         self._video_id = video_id
         self._req = None
         self._livechat = None
@@ -33,6 +34,7 @@ class Watcher:
         self._tokenlist = TokenList()
         self._seektime = seektime
         self._logger = logger
+        self._interruptable = interruptable
 
     def start(self):
         if self._first_run:
@@ -40,9 +42,14 @@ class Watcher:
             self._req = HttpRequest()
             self._livechat = LiveChat(
                 self._video_id, req=self._req,
-                tokenlist=self._tokenlist,
-                seektime=self._seektime)
-            self._blocker = Blocker(req=self._req, tokenlist=self._tokenlist)
+                tokenlist = self._tokenlist,
+                seektime = self._seektime,
+                interruptable = self._interruptable,
+                logger = self._logger)
+            self._blocker = Blocker(
+                req = self._req,
+                tokenlist = self._tokenlist,
+                logger = self._logger)
         else:
             self._logger.info("すでにチャット取得が開始されています。")
 
