@@ -45,7 +45,7 @@ class DefaultProcessor:
             renderer.cleanup()
             
         except (KeyError,TypeError) as e:
-            logger.error(f"{str(type(e))}-{str(e)} sitem:{str(sitem)}")
+            logger.error(f"{str(type(e))}-{str(e)} sitem:{str(sitem)[:60]}")
             return None
         return renderer        
 
