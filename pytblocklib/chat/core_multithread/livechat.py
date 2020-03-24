@@ -6,6 +6,7 @@ import traceback
 import urllib.parse
 from concurrent.futures import CancelledError, ThreadPoolExecutor
 from queue import Queue
+from threading import  Event
 from .buffer import Buffer
 from .. import config
 from ..exceptions  import ChatParseException,IllegalFunctionCall
@@ -55,6 +56,7 @@ class LiveChat:
         self._first_fetch = True
         self._fetch_url = "live_chat/get_live_chat?continuation="
         self._topchat_only = topchat_only
+        self._event = Event()
 
 
         LiveChat._logger = logger
@@ -115,7 +117,7 @@ class LiveChat:
                     time_mark =time.time()
                     self._buffer.put(chat_component)
                     diff_time = timeout - (time.time()-time_mark)
-                    time.sleep(diff_time if diff_time > 0 else 0)        
+                    self._event.wait(diff_time if diff_time > 0 else 0)
                     continuation = metadata.get('continuation')  
         except ChatParseException as e:
             self._logger.debug(f"[{self._video_id}]{str(e)}")
@@ -259,3 +261,4 @@ class LiveChat:
         cls._logger.debug("shutdown...")
         for t in LiveChat._listeners:
             t._is_alive = False
+            t._event.set()
