@@ -32,7 +32,6 @@ class LiveChat:
                 interruptable = True,
                 callback = None,
                 done_callback = None,
-                direct_mode = False,
                 force_replay = False,
                 topchat_only  = False,
                 logger = config.logger(__name__),
@@ -48,7 +47,6 @@ class LiveChat:
         self._callback = callback
         self._done_callback = done_callback
         self._executor = ThreadPoolExecutor(max_workers=2)
-        self._direct_mode = direct_mode
         self._is_alive   = True
         self._is_replay = force_replay
         self._parser = Parser(is_replay = self._is_replay)
@@ -71,17 +69,12 @@ class LiveChat:
 
 
     def _setup(self):
-        if self._direct_mode:
-            if self._callback is None:
-                raise IllegalFunctionCall(
-                    "When direct_mode=True, callback parameter is required.")
+        if self._buffer is None:
+            self._buffer = Buffer(maxsize = 100)
+        if self._callback is None:
+            pass 
         else:
-            if self._buffer is None:
-                self._buffer = Buffer(maxsize = 100)
-            if self._callback is None:
-                pass 
-            else:
-                self._executor.submit(self._callback_loop,self._callback)
+            self._executor.submit(self._callback_loop,self._callback)
         listen_task = self._executor.submit(self._startlisten)
         if self._done_callback is None:
             listen_task.add_done_callback(self.finish)
@@ -122,14 +115,7 @@ class LiveChat:
                         "tokendict" : metadata.get("tokendict")
                     }
                     time_mark =time.time()
-                    if self._direct_mode:
-                        processed_chat = self._processor.process([chat_component])
-                        if isinstance(processed_chat,tuple):
-                            self._callback(*processed_chat)
-                        else:
-                            self._callback(processed_chat)
-                    else:
-                        self._buffer.put(chat_component)
+                    self._buffer.put(chat_component)
                     diff_time = timeout - (time.time()-time_mark)
                     time.sleep(diff_time if diff_time > 0 else 0)        
                     continuation = metadata.get('continuation')  
@@ -269,9 +255,6 @@ class LiveChat:
         Listenerを終了する。
         '''
         self._is_alive = False
-        if self._direct_mode == False:
-            #bufferにダミーオブジェクトを入れてis_alive()を判定させる
-            self._buffer.put({'chatdata':'','timeout':0}) 
         self._logger.info(f'[{self._video_id}]終了しました')
   
     @classmethod
