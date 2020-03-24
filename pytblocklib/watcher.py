@@ -42,10 +42,14 @@ class Watcher:
             self._req = HttpRequest()
             self._livechat = LiveChat(
                 self._video_id, req=self._req,
-                tokenlist=self._tokenlist,
-                seektime=self._seektime,
-                interruptable=self._interruptable)
-            self._blocker = Blocker(req=self._req, tokenlist=self._tokenlist)
+                tokenlist = self._tokenlist,
+                seektime = self._seektime,
+                interruptable = self._interruptable,
+                logger = self._logger)
+            self._blocker = Blocker(
+                req = self._req,
+                tokenlist = self._tokenlist,
+                logger = self._logger)
         else:
             self._logger.info("すでにチャット取得が開始されています。")
 
