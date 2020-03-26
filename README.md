@@ -96,6 +96,12 @@ w.stop()
 + + Need to implement blocking procedures and user interface separately.
 + + Less portability : requires python environment. (planning to distribute as executable file)
 
+## Using
+Customizing 
+browser_cookie3<br>
+original :<br>
+https://github.com/borisbabic/browser_cookie3<br>
+
 
 ## Requirements
 browser_cookie3<br>
