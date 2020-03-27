@@ -9,10 +9,9 @@ Pytblocklib は、Youtubeのスパムボットのブロックを補助するラ�
 YouTube API設定不要、リスナー側のブロックにも対応しています。<br>
 詳細は[wiki](https://github.com/taizan-hokuto/pytblocklib/wiki) を参照してください。
 <br>
-+ このプロジェクトは開発中です。
 + YouTubeの仕様変更等により使用できなくなる場合があります。
-+ ソースの使用に際しては自己責任でお願いいたします。
-+ LICENSE:[GPL-3.0](https://github.com/taizan-hokuto/pytblocklib/blob/master/LICENSE)
++ 使用に際しては自己責任でお願いいたします。
++ LICENSE:[LGPL-3.0](https://github.com/taizan-hokuto/pytblocklib/blob/master/LICENSE)
 <br>
 
 ## Description
