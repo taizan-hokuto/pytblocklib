@@ -18,16 +18,21 @@ class Watcher:
     Parameters
     ----------
     video_id : str :
+
     seektime : int :
-        Unit:seconds.
+        Unit:second.
         Start position of fetching chat data.
         If negative value, try to fetch chat data
         posted before broadcast start.
+    
+    interruptable : bool : (default=True)
+        When Ctrl+C (Command+C) is pressed, detects 
+        SIGINT and sets loop() to False to stop chat acquisition.
     '''
     def __init__(self, video_id, seektime=-1, logger=config.logger(__name__),
         interruptable = True):
         self._video_id = video_id
-        self._req = None
+        self._req = HttpRequest()
         self._livechat = None
         self._blocker = None
         self._first_run = True
@@ -39,7 +44,6 @@ class Watcher:
     def start(self):
         if self._first_run:
             self._first_run = False
-            self._req = HttpRequest()
             self._livechat = LiveChat(
                 self._video_id, req=self._req,
                 tokenlist = self._tokenlist,
@@ -84,3 +88,6 @@ class Watcher:
                   "最初にstart([動画ID])を呼び出す必要があります。")
             return True
         return False
+
+    def get_session(self):
+        return self._req.session
