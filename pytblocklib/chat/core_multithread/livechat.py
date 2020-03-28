@@ -44,7 +44,10 @@ class LiveChat:
         self._logger = logger
         self._seektime = seektime
         self._processor = DefaultProcessor(tokenlist)
-        self._buffer = buffer
+        if buffer is None:
+            self._buffer = Buffer(maxsize = 100)
+        else:
+            self._buffer = buffer
         self._callback = callback
         self._done_callback = done_callback
         self._executor = ThreadPoolExecutor(max_workers=2)
@@ -67,12 +70,9 @@ class LiveChat:
                 (LiveChat.shutdown(None,signal.SIGINT,b))
                 ))
         LiveChat._listeners.append(self)
-        self._setup()
 
 
-    def _setup(self):
-        if self._buffer is None:
-            self._buffer = Buffer(maxsize = 100)
+    def start(self):
         if self._callback is None:
             pass 
         else:
