@@ -2,8 +2,10 @@
 """
 browser_coookie3:
 
-This is customized module.
-original : https://github.com/borisbabic/browser_cookie3
+This module uses a customized `browser_cookie3` library.
+Original `browser_cookie 3`'s copyright belongs to borisbabic : 
+https://github.com/borisbabic/browser_cookie3
+
 
 """
 import os

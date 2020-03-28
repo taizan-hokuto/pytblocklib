@@ -96,17 +96,10 @@ w.stop()
 + + Less portability : requires python environment. (planning to distribute as executable file)
 
 ## Using
-Customizing 
-browser_cookie3<br>
-original :<br>
+This program uses a customized `browser_cookie3` library.<br>
+The original copyright  of `browser_cookie 3` belongs to borisbabic : <br>
 https://github.com/borisbabic/browser_cookie3<br>
 
-
-## Requirements
-browser_cookie3<br>
-pytz<br>
-requests<br>
-urllib3<br>
 
 ## LICENSE
 GNU LESSER GENERAL PUBLIC LICENSE Version 3
