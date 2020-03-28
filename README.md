@@ -11,7 +11,7 @@ YouTube API設定不要、リスナー側のブロックにも対応していま
 <br>
 + YouTubeの仕様変更等により使用できなくなる場合があります。
 + 使用に際しては自己責任でお願いいたします。
-+ LICENSE:[LGPL-3.0](https://github.com/taizan-hokuto/pytblocklib/blob/master/LICENSE)
++ [LICENSE](https://github.com/taizan-hokuto/pytblocklib/wiki#%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6):[LGPL-3.0](https://github.com/taizan-hokuto/pytblocklib/blob/master/LICENSE)
 <br>
 
 ## Description
