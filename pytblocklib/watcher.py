@@ -54,6 +54,7 @@ class Watcher:
                 req = self._req,
                 tokenlist = self._tokenlist,
                 logger = self._logger)
+            self._livechat.start()
         else:
             self._logger.info("すでにチャット取得が開始されています。")
 
