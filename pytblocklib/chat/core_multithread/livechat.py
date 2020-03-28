@@ -258,7 +258,7 @@ class LiveChat:
   
     @classmethod
     def shutdown(cls, event, sig = None, handler=None):
-        cls._logger.debug("shutdown...")
         for t in LiveChat._listeners:
+            t._logger.debug("shutdown...")
             t._is_alive = False
             t._event.set()
