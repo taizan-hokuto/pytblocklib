@@ -109,7 +109,7 @@ requests<br>
 urllib3<br>
 
 ## LICENSE
-GNU GENERAL PUBLIC LICENSE Version 3
+GNU LESSER GENERAL PUBLIC LICENSE Version 3
 
 
 
