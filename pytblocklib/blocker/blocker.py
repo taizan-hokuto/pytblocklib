@@ -88,9 +88,10 @@ class Blocker:
         self._logger = logger
         self._ser = None
 
-    def _save_blockedlist(self):
+    def _setup_blocklist_file(self):
         '''
-        Save blocklist and tokens temporarily .
+        [DEPRECATE]
+        Setup file to save blocklist and tokens temporarily.
         '''
         if os.path.exists('blocklst.temp'):
             os.remove('blocklst.temp')
@@ -147,30 +148,28 @@ class Blocker:
                 serviceEndPoint, _token.token.csn, _token.token.xsrf_token)
             resp = json.loads(resp.text)
             if resp.get("code") == "SUCCESS":
-                #Stores params required for unblocking.
+                #Store the params required for unblocking.
                 sej_unblock = get_item(resp, sejpath_unblock)
-                self._add_blockedlist(sej_unblock, key, _token)
+                self._add_blocklist(sej_unblock, key, _token)
                 self._logger.info(get_item(resp, sejpath_response_block_success))
                 return True
         self._logger.info("ブロックできませんでした。")
         return False
 
-    def _add_blockedlist(self,sej_unblock, key, _token):
+    def _add_blocklist(self,sej_unblock, key, _token):
         #block_item = {"sej_unblock":sej_unblock, "token":_token}
         block_item = BlockItem(key=key,sej_unblock=sej_unblock, token=_token)
         self.blocked_list[key] = block_item
-        #stores blocked user id and tokens
-        self._ser.save(block_item)
         self._logger.debug(f"{key}をブロックリストに追加しました")
     
-    def _del_blockedlist(self,key):
+    def _del_blocklist(self,key):
             result = self.blocked_list.pop(key)
             if result:
                 self._logger.debug(f"ブロックリストから[{key}]を削除しました。")
             else:
                 self._logger.error(f"ブロックリストに存在しないid({key})を削除しようとしました。")
 
-    def _add_unblockedlist(self,key):
+    def _add_unblocklist(self,key):
         self.unblocked_list[key] = 1
         self._logger.debug(f"{key}をブロック解除リストに追加しました")
 
@@ -191,14 +190,15 @@ class Blocker:
         )
         resp = json.loads(resp.text)
         if resp.get("code") == "SUCCESS":
-            self._del_blockedlist(key)
+            self._del_blocklist(key)
             self._logger.info(get_item(resp, sejpath_response_unblock_success))
             return True
         self._logger.error("セッション切断により自動ブロック解除に失敗しました。手動で解除してください")
         return False
         
-    def _load_blockedlist(self):
+    def _load_blocklist(self):
         '''
+        [DEPRECATE]
         Load blocklist and tokens.
         '''
         items = self._ser.load()
