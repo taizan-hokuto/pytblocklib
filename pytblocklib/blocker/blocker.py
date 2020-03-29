@@ -87,10 +87,11 @@ class Blocker:
         self.tokens = tokenlist
         self._logger = logger
         self._ser = None
-        self._setup()
 
-    def _setup(self):
-        self._logger.debug('test')
+    def _save_blockedlist(self):
+        '''
+        Save blocklist and tokens temporarily .
+        '''
         if os.path.exists('blocklst.temp'):
             os.remove('blocklst.temp')
         self._ser = Serializer('blocklst.temp')
@@ -114,7 +115,7 @@ class Blocker:
 
     def block(self, key):
         '''
-        Block specified listeners's chats.
+        Block specified listener's chats.
         
         Parameter
         ---------
@@ -131,7 +132,7 @@ class Blocker:
 
         contextMenuJson = self._getContextMenuJson(_token.chat_param)
 
-        '''Even if the `owner` (streamer) or moderator try to block someone
+        '''When the `owner` (streamer) or moderator try to block someone
         in the broadcast, the structure of contextMenuJson is diffrent and 
         fail to parse. So we retry to parse the JSON with different path.
         '''
@@ -196,7 +197,10 @@ class Blocker:
         self._logger.error("セッション切断により自動ブロック解除に失敗しました。手動で解除してください")
         return False
         
-    def _load_block_list(self):
+    def _load_blockedlist(self):
+        '''
+        Load blocklist and tokens.
+        '''
         items = self._ser.load()
         if items is None: return
         for item in items:
