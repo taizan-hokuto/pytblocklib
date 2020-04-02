@@ -23,8 +23,6 @@ MAX_RETRY = 10
 class LiveChat:
 
     _setup_finished = False
-    #チャット監視中のListenerのリスト
-    _listeners = []
 
     def __init__(self, video_id,
                 seektime = 0,
@@ -60,18 +58,9 @@ class LiveChat:
         self._fetch_url = "live_chat/get_live_chat?continuation="
         self._topchat_only = topchat_only
         self._event = Event()
-
-
-        LiveChat._logger = logger
-        if not LiveChat._setup_finished:
-            LiveChat._setup_finished = True
-            if interruptable:
-                signal.signal(signal.SIGINT,  (lambda a, b:  
-                (LiveChat.shutdown(None,signal.SIGINT,b))
-                ))
-        LiveChat._listeners.append(self)
-
-
+        if interruptable:
+            signal.signal(signal.SIGINT,  lambda a, b:self.terminate())
+        
     def start(self):
         if self._callback is None:
             pass 
@@ -84,7 +73,8 @@ class LiveChat:
             listen_task.add_done_callback(self._done_callback)
 
     def _startlisten(self):
-        time.sleep(0.1)  #sleep shortly to prohibit skipping fetching data
+        #sleep shortly to prohibit skipping fetching data
+        time.sleep(0.1)  
         """Fetch first continuation parameter,
         create and start _listen loop.
         """
@@ -92,7 +82,6 @@ class LiveChat:
         self._listen(initial_continuation)
 
     def _listen(self, continuation):
-
         ''' Fetch chat data and store them into buffer,
         get next continuaiton parameter and loop.
 
@@ -219,8 +208,11 @@ class LiveChat:
              : Processorによって加工されたチャットデータ
         """
         if self._callback is None:
-            items = self._buffer.get()
-            return  self._processor.process(items)
+            if self.is_alive():
+                items = self._buffer.get()
+                return  self._processor.process(items)
+            else:
+                return []
         raise IllegalFunctionCall(
             "既にcallbackを登録済みのため、get()は実行できません。")
 
@@ -253,12 +245,8 @@ class LiveChat:
         '''
         Listenerを終了する。
         '''
-        self._is_alive = False
-        self._logger.info(f'[{self._video_id}]終了しました')
-  
-    @classmethod
-    def shutdown(cls, event, sig = None, handler=None):
-        for t in LiveChat._listeners:
-            t._logger.debug("shutdown...")
-            t._is_alive = False
-            t._event.set()
+        if self.is_alive():
+            self._is_alive = False
+            self._buffer.put({})
+            self._event.set()
+            self._logger.info(f'[{self._video_id}]終了しました')
