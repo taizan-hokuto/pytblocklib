@@ -23,11 +23,11 @@ class Watcher:
         Unit:second.
         Start position of fetching chat data.
         If negative value, try to fetch chat data
-        posted before broadcast start.
+        posted before the broadcast starts.
     
     interruptable : bool : (default=True)
-        When Ctrl+C (Command+C) is pressed, detects 
-        SIGINT and sets loop() to False to stop chat acquisition.
+        When Ctrl+C is pressed, detects SIGINT 
+        and sets loop() to False to stop fetching chat data.
     '''
     def __init__(self, video_id, seektime=-1, logger=config.logger(__name__),
         interruptable = True):
@@ -81,7 +81,7 @@ class Watcher:
         return self._livechat.is_alive()
 
     def stop(self):
-        LiveChat.shutdown(event=None)
+        self._livechat.terminate()
 
     def _no_livechat(self):
         if self._first_run:

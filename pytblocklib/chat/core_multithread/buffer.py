@@ -20,16 +20,14 @@ class Buffer(queue.Queue):
             return 
         if super().full():
             super().get_nowait()
-        else:
-            super().put(item)
+        super().put(item)
             
     def put_nowait(self,item):
         if item is None:
             return 
         if super().full():
             super().get_nowait()
-        else:
-            super().put_nowait(item)
+        super().put_nowait(item)
             
     def get(self):
         ret = []
