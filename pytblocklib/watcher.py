@@ -81,6 +81,7 @@ class Watcher:
         return self._livechat.is_alive()
 
     def stop(self):
+        if self._first_run: return
         self._livechat.terminate()
 
     def _no_livechat(self):
