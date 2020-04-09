@@ -14,7 +14,7 @@ from .serializer import Serializer
 sejpath_listener = [
     "response",
     "liveChatItemContextMenuSupportedRenderers",
-    "menuRenderer","items",2,
+    "menuRenderer","items",1,
     "menuNavigationItemRenderer",
     "navigationEndpoint",
     "confirmDialogEndpoint",
@@ -26,7 +26,7 @@ sejpath_listener = [
 sejpath_author = [
     "response",
     "liveChatItemContextMenuSupportedRenderers",
-    "menuRenderer","items",4,
+    "menuRenderer","items",3,
     "menuServiceItemRenderer",
     "serviceEndpoint"
 ]
@@ -34,7 +34,7 @@ sejpath_author = [
 sejpath_author_alt = [
     "response",
     "liveChatItemContextMenuSupportedRenderers",
-    "menuRenderer","items",5,
+    "menuRenderer","items",4,
     "menuNavigationItemRenderer",
     "navigationEndpoint",
     "authServiceDialogEndpoint",
@@ -191,9 +191,10 @@ class Blocker:
         resp = json.loads(resp.text)
         if resp.get("code") == "SUCCESS":
             self._del_blocklist(key)
-            self._logger.info(get_item(resp, sejpath_response_unblock_success))
+            resp_dialog = get_item(resp, sejpath_response_unblock_success)
+            self._logger.info(resp_dialog or f"{key}のブロックを解除しました")
             return True
-        self._logger.error("セッション切断により自動ブロック解除に失敗しました。手動で解除してください")
+        self._logger.error("セッション切断等の理由により自動ブロック解除に失敗しました。手動で解除してください")
         return False
         
     def _load_blocklist(self):
