@@ -1,4 +1,3 @@
-import browser_cookie3
 import json
 import requests
 import urllib
