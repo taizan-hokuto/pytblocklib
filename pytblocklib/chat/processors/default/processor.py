@@ -1,6 +1,6 @@
-import asyncio
-import time
-from .renderer.base import BaseRenderer
+from .renderer.textmessage import LiveChatTextMessageRenderer
+from .renderer.paidmessage import LiveChatPaidMessageRenderer
+from .renderer.legacypaid import LiveChatLegacyPaidMessageRenderer
 from ... import config
 from ...tokenlist import TokenList, Token, TokenPair
 
@@ -39,20 +39,21 @@ class DefaultProcessor:
             renderer = self._get_renderer(item)
             if renderer is None:
                 return None
-
             renderer.get_snippet()
             renderer.get_authordetails()
             renderer.cleanup()
-            
+
         except (KeyError,TypeError) as e:
             logger.error(f"{str(type(e))}-{str(e)} sitem:{str(sitem)[:60]}")
             return None
         return renderer        
 
     def _get_renderer(self, item):
-        if item.get("liveChatTextMessageRenderer") or \
-            item.get("liveChatPaidMessageRenderer") or \
-            item.get( "liveChatPaidStickerRenderer") or \
-            item.get("liveChatLegacyPaidMessageRenderer"):
-            return BaseRenderer(item)
+        if item.get("liveChatTextMessageRenderer"):
+            return LiveChatTextMessageRenderer(item)
+        if item.get("liveChatPaidMessageRenderer") or \
+           item.get("liveChatPaidStickerRenderer"):
+            return LiveChatPaidMessageRenderer(item)
+        if item.get("liveChatLegacyPaidMessageRenderer"):
+            return LiveChatLegacyPaidMessageRenderer(item)
         return None

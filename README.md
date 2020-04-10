@@ -70,7 +70,6 @@ w.stop()
 + + Sophisticated user interface on browser, integrated functions.
 + + Applicable for Twitch.
 + + Various blocking setting (e.g. blacklist, excess emotes, repetitions)
-+ + Applicable to Twitch.
 
 + Cons
 + + Only srteamers can block spams on their broadcasting with moderator privileges, not per listener.
