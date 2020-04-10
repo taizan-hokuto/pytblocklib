@@ -1,6 +1,5 @@
 from .renderer.textmessage import LiveChatTextMessageRenderer
 from .renderer.paidmessage import LiveChatPaidMessageRenderer
-from .renderer.paidsticker import LiveChatPaidStickerRenderer
 from .renderer.legacypaid import LiveChatLegacyPaidMessageRenderer
 from ... import config
 from ...tokenlist import TokenList, Token, TokenPair
@@ -52,10 +51,9 @@ class DefaultProcessor:
     def _get_renderer(self, item):
         if item.get("liveChatTextMessageRenderer"):
             return LiveChatTextMessageRenderer(item)
-        if item.get("liveChatPaidMessageRenderer"):
+        if item.get("liveChatPaidMessageRenderer") or \
+           item.get("liveChatPaidStickerRenderer"):
             return LiveChatPaidMessageRenderer(item)
-        if item.get("liveChatPaidStickerRenderer"):
-            return LiveChatPaidStickerRenderer(item)
         if item.get("liveChatLegacyPaidMessageRenderer"):
             return LiveChatLegacyPaidMessageRenderer(item)
         return None

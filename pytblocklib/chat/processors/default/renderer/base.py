@@ -12,21 +12,21 @@ class BaseRenderer:
         self.timestamp = int(timestampUsec/1000)
         tst = self.renderer.get("timestampText")
         if tst:
-            self.elapsedTime = tst.get("simpleText")
+            self.elapsed = tst.get("simpleText")
         else:
-            self.elapsedTime = ""
+            self.elapsed = ""
         self.datetime = self.get_datetime(timestampUsec)
-        self.message ,self.messageEx = self.get_message(self.renderer)
+        self.message ,self.message_ex = self.get_message(self.renderer)
         self.id =  self.renderer.get('id')
-        self.bgColor = 0
+        self.bg_color = 0
         self.params = self.renderer["contextMenuEndpoint"]["liveChatItemContextMenuEndpoint"]["params"]
 
     def get_authordetails(self):
         self.author_badge = ""
-        (self.isVerified, 
-        self.isChatOwner, 
-        self.isChatSponsor, 
-        self.isChatModerator) = (
+        (self.is_verified, 
+        self.is_owner, 
+        self.is_member, 
+        self.is_moderator) = (
             self.get_badges(self.renderer)
         )
         self.author_id = self.renderer.get("authorExternalChannelId")
@@ -53,25 +53,25 @@ class BaseRenderer:
 
 
     def get_badges(self,renderer):
-        isVerified = False
-        isChatOwner = False
-        isChatSponsor = False
-        isChatModerator = False
+        is_verified = False
+        is_owner = False
+        is_member = False
+        is_moderator = False
         badges=renderer.get("authorBadges")
         if badges:
             for badge in badges:
                 if badge["liveChatAuthorBadgeRenderer"].get("icon"):
                     author_type  = badge["liveChatAuthorBadgeRenderer"]["icon"]["iconType"]
                     if author_type == 'VERIFIED':
-                        isVerified = True
+                        is_verified = True
                     if author_type == 'OWNER':
-                        isChatOwner = True
+                        is_owner = True
                     if author_type == 'MODERATOR':
-                        isChatModerator = True
+                        is_moderator = True
                 if badge["liveChatAuthorBadgeRenderer"].get("customThumbnail"):
-                    isChatSponsor = True
+                    is_member = True
                     self.get_badgeurl(badge)
-        return isVerified, isChatOwner, isChatSponsor, isChatModerator
+        return is_verified, is_owner, is_member, is_moderator
     
 
     def get_badgeurl(self,badge):
