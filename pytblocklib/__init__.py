@@ -6,7 +6,7 @@ The original copyright of `browser_cookie 3` belongs to borisbabic :
 https://github.com/borisbabic/browser_cookie3
 """
 __copyright__    = 'Copyright (C) 2020 taizan-hokuto'
-__version__      = '0.1.3'
+__version__      = '0.1.4'
 __license__      = 'GNU Lesser General Public License v3 (LGPLv3)'
 __author__       = 'taizan-hokuto'
 __author_email__ = '55448286+taizan-hokuto@users.noreply.github.com'

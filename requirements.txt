@@ -3,6 +3,6 @@ requests
 urllib3
 pyaes
 pbkdf2
-keyring
+keyring == 19.2.0
 lz4
 pycryptodome
