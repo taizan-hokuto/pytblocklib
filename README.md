@@ -45,12 +45,13 @@ while w.loop():
     chats = w.get_chats()
 
     for chat in chats:
-        for ng_word in NG_WORDS:
-            if ng_word in chat.message or ng_word in chat.author_name:
-                print("Found :message-`{}` by {} ".format(chat.message, chat.author_name))
-                #Block user by specifying author channel id.
-                w.block(chat.author_id)
-                blocklist.append(chat.author_id)
+        if any(ng_word in chat.message or ng_word in chat.author_name  
+            for ng_word in NG_WORDS):
+            print("Found :message-`{}` by {} ".format(
+                chat.message, chat.author_name))
+            #Block user by specifying author channel id.
+            w.block(chat.author_id)
+            blocklist.append(chat.author_id)
 
     time.sleep(3)
 
