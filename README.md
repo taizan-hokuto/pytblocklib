@@ -74,7 +74,7 @@ w.stop()
 
 ## Compatible environment
 + Python 3.7.4 later
-+ OS : Windows 10/ macOS Catarina / Ubuntu 18.04.2 LTS
++ OS : Windows 10 / macOS Catalina / Ubuntu 18.04.2 LTS
 + Browser: Chrome v80 later / Firefox 75.0 later (requires browser cookie)
 
 
