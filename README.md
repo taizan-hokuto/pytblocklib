@@ -27,7 +27,12 @@ Function around livechat is based on my [pytchat](https://github.com/taizan-hoku
 + No **S**craping, no **S**elenium, no Beautiful**S**oup.
  
  
-## Usage
+## Install
+```
+pip install pytblocklib
+```
+
+## Example
 ```python
 from pytblocklib import Watcher
 import time
@@ -45,12 +50,13 @@ while w.loop():
     chats = w.get_chats()
 
     for chat in chats:
-        for ng_word in NG_WORDS:
-            if ng_word in chat.message or ng_word in chat.author_name:
-                print("Found :message-`{}` by {} ".format(chat.message, chat.author_name))
-                #Block user by specifying author channel id.
-                w.block(chat.author_id)
-                blocklist.append(chat.author_id)
+        if any(ng_word in chat.message or ng_word in chat.author_name  
+            for ng_word in NG_WORDS):
+            print("Found :message-`{}` by {} ".format(
+                chat.message, chat.author_name))
+            #Block user by specifying author channel id.
+            w.block(chat.author_id)
+            blocklist.append(chat.author_id)
 
     time.sleep(3)
 
@@ -62,6 +68,16 @@ for author_id in blocklist:
 w.stop()
 
 ```
+
+## Derived app
+[AutoBlocker](https://github.com/Sayamame-beans/AutoBlocker) by [sayamame_beans](https://github.com/Sayamame-beans) <br>
+
+## Compatible environment
++ Python 3.7.4 later
++ OS : Windows 10/ macOS Catarina / Ubuntu 18.04.2 LTS
++ Browser: Chrome v80 later / Firefox 75.0 later (requires browser cookie)
+
+
 
 ## VS
 
@@ -92,7 +108,8 @@ w.stop()
 
 + Cons
 + + Need to implement blocking procedures and user interface separately.
-+ + Less portability : requires python environment. (planning to distribute as executable file)
++ + Less portability : requires python environment.
+
 
 ## Using
 This program uses a customized `browser_cookie3` library.<br>

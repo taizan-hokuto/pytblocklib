@@ -62,17 +62,17 @@ class Watcher:
         if self._no_livechat(): return
         return self._livechat.get()
 
-    def block(self, author_id:str) -> str:
-        if self._no_livechat(): return
+    def block(self, author_id:str) -> bool:
+        if self._no_livechat(): return False
         return self._blocker.block(author_id)
 
-    def unblock(self, author_id:str) -> str:
+    def unblock(self, author_id:str) -> bool:
         '''
         The unblock function is available only user blocked 
         while this script is running. After the script finishes,
         all parameters required for unblocking are disabled.
         '''
-        if self._no_livechat(): return
+        if self._no_livechat(): return False
         return self._blocker.unblock(author_id)
 
     def loop(self) -> bool:
