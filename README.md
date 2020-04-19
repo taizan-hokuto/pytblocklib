@@ -27,7 +27,12 @@ Function around livechat is based on my [pytchat](https://github.com/taizan-hoku
 + No **S**craping, no **S**elenium, no Beautiful**S**oup.
  
  
-## Usage
+## Install
+```
+pip install pytblocklib
+```
+
+## Example
 ```python
 from pytblocklib import Watcher
 import time
@@ -64,6 +69,16 @@ w.stop()
 
 ```
 
+## Derived app
+[AutoBlocker](https://github.com/Sayamame-beans/AutoBlocker) by [sayamame_beans](https://github.com/Sayamame-beans) <br>
+
+## Compatible environment
++ Python 3.7.4 later
++ OS : Windows 10/ macOS Catarina / Ubuntu 18.04.2 LTS
++ Browser: Chrome v80 later / Firefox 75.0 later (requires browser cookie)
+
+
+
 ## VS
 
 ### [Nightbot](https://nightbot.tv/)
@@ -93,7 +108,8 @@ w.stop()
 
 + Cons
 + + Need to implement blocking procedures and user interface separately.
-+ + Less portability : requires python environment. (planning to distribute as executable file)
++ + Less portability : requires python environment.
+
 
 ## Using
 This program uses a customized `browser_cookie3` library.<br>
