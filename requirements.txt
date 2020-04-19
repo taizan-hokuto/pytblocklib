@@ -6,3 +6,4 @@ pbkdf2
 keyring == 19.2.0
 lz4
 pycryptodome
+secretstorage == 3.1.2

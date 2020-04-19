@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-browser_coookie3:
+browser_cookie3:
 
-This module uses a customized `browser_cookie3` library.
-Original `browser_cookie 3`'s copyright belongs to borisbabic : 
+This module customizes `browser_cookie3` library.
+The copyright of the original `browser_cookie3` belongs to borisbabic :
 https://github.com/borisbabic/browser_cookie3
-
 
 """
 import os
@@ -19,6 +18,7 @@ import lz4.block
 import datetime
 import configparser
 import base64
+import secretstorage
 from Crypto.Cipher import AES
 
 try:
@@ -138,6 +138,7 @@ class Chrome:
         self.length = 16
         # domain name to filter cookies by
         self.domain_name = domain_name
+
         if sys.platform == 'darwin':
             # running Chrome on OSX
             my_pass = keyring.get_password('Chrome Safe Storage', 'Chrome').encode('utf8')  # get key from keyring
@@ -148,17 +149,17 @@ class Chrome:
 
         elif sys.platform.startswith('linux'):
             # running Chrome on Linux
-            my_pass = 'peanuts'.encode('utf8')  # chrome linux is encrypted with the key peanuts
-            iterations = 1
-            self.key = PBKDF2(my_pass, self.salt, iterations=iterations).read(self.length)
             paths = map(os.path.expanduser, [
                 chrome_active_cookie_file(os.path.expanduser('~/.config/google-chrome')),
                 chrome_active_cookie_file(os.path.expanduser('~/.config/chromium')),
                 chrome_active_cookie_file(os.path.expanduser('~/.config/google-chrome-beta'))
             ])
             cookie_file = cookie_file or next(filter(os.path.exists, paths), None)
+            my_pass = self.get_linux_pass(cookie_file)
+            iterations = 1
+            self.key = PBKDF2(my_pass, self.salt, iterations=iterations).read(self.length)
+ 
         elif sys.platform == "win32":
-
             # Read key from file
             key_file = glob.glob(os.path.join(os.getenv('APPDATA', ''), '..\Local\\Google\\Chrome\\User Data\\Local State')) \
                        or glob.glob(os.path.join(os.getenv('LOCALAPPDATA', ''), 'Google\\Chrome\\User Data\\Local State')) \
@@ -256,7 +257,6 @@ class Chrome:
     def _decrypt(self, value, encrypted_value):
         """Decrypt encoded cookies
         """
-
         if sys.platform == 'win32':
             try:
                 return self._decrypt_windows_chrome(value, encrypted_value)
@@ -275,7 +275,7 @@ class Chrome:
                 data = aes.decrypt_and_verify(encrypted_value[12:-16], tag)
                 return data.decode()
 
-        if value or (encrypted_value[:3] != b'v10'):
+        if value or (not encrypted_value[:3] in [b'v10',b'v11']):
             return value
 
         # Encrypted cookies should be prefixed with 'v10' according to the
@@ -288,6 +288,40 @@ class Chrome:
         decrypted += cipher.feed(encrypted_value[encrypted_value_half_len:])
         decrypted += cipher.feed()
         return decrypted.decode("utf-8")
+
+    def get_linux_pass(self, cookie_file: str) -> bytes:
+        """
+        Adapted from 
+        https://github.com/n8henrie/pycookiecheat/issues/27
+        
+        Get the settings for Chrome/Chromium cookies on Linux.
+
+        Parameter:
+            cookie_file: Path of cookie file
+        Return:
+            pass for decryption
+        """
+        bus = secretstorage.dbus_init()
+        collection = secretstorage.get_any_collection(bus)  ## login keyring
+        # Set the default linux password
+        my_pass = "peanuts".encode('utf-8')
+        browser =''
+        if 'chrome' in cookie_file:
+            browser = 'Chrome'
+        elif 'chromium' in cookie_file:
+            browser = 'Chromium'
+        else:
+            raise BrowserCookieError('Browser cookie type is not supported.' 
+        'See and change the setting in config.ini.')
+        if not collection.is_locked():
+            label_to_check = f"{browser} Safe Storage"
+            items1 = collection.get_all_items()
+            for item in items1:
+                if item.get_label() == label_to_check:
+                    my_pass = item.get_secret()
+        else:
+            raise BrowserCookieError("keyring is locked")
+        return my_pass
 
 
 class Firefox:
@@ -444,7 +478,3 @@ def load(domain_name=""):
         except BrowserCookieError:
             pass
     return cj
-
-
-if __name__ == '__main__':
-    print(load())
