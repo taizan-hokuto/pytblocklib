@@ -1,8 +1,14 @@
 from .chat import LiveChat
 from .blocker.blocker import Blocker
 from .http.request import HttpRequest
-from .chat.tokenlist import TokenList, Token
+from .chat.tokenlist import TokenList
+from .chat import exceptions as chat_exceptions
 from . import config
+from . import exceptions
+from json import JSONDecodeError
+from requests.exceptions import RequestException
+
+
 class Watcher:
     '''
     Watcher provides handles for fetching live chat and blocking operations.
@@ -12,7 +18,7 @@ class Watcher:
     + fetch chats from buffer at any time (get() function) .
     + block and unblock the specified user.
 
-    Note: LiveChat object derives from 
+    Note: LiveChat object derives from
      pytchat(https://github.com/taizan-hokuto/pytchat).
 
     Parameters
@@ -26,11 +32,10 @@ class Watcher:
         posted before the broadcast starts.
     
     interruptable : bool : (default=True)
-        When Ctrl+C is pressed, detects SIGINT 
+        When Ctrl+C is pressed, detects SIGINT
         and sets loop() to False to stop fetching chat data.
     '''
-    def __init__(self, video_id, seektime=-1, logger=config.logger(__name__),
-        interruptable = True):
+    def __init__(self, video_id, seektime=-1, logger=config.logger(__name__), interruptable=True):
         self._video_id = video_id
         self._req = HttpRequest()
         self._livechat = None
@@ -46,33 +51,36 @@ class Watcher:
             self._first_run = False
             self._livechat = LiveChat(
                 self._video_id, req=self._req,
-                tokenlist = self._tokenlist,
-                seektime = self._seektime,
-                interruptable = self._interruptable,
-                logger = self._logger)
+                tokenlist=self._tokenlist,
+                seektime=self._seektime,
+                interruptable=self._interruptable,
+                logger=self._logger)
             self._blocker = Blocker(
-                req = self._req,
-                tokenlist = self._tokenlist,
-                logger = self._logger)
+                req=self._req,
+                tokenlist=self._tokenlist,
+                logger=self._logger)
             self._livechat.start()
         else:
             self._logger.info("すでにチャット取得が開始されています。")
 
     def get_chats(self):
-        if self._no_livechat(): return
+        if self._no_livechat():
+            return
         return self._livechat.get()
 
-    def block(self, author_id:str) -> bool:
-        if self._no_livechat(): return False
+    def block(self, author_id: str) -> bool:
+        if self._no_livechat():
+            return False
         return self._blocker.block(author_id)
 
-    def unblock(self, author_id:str) -> bool:
+    def unblock(self, author_id: str) -> bool:
         '''
         The unblock function is available only user blocked 
         while this script is running. After the script finishes,
         all parameters required for unblocking are disabled.
         '''
-        if self._no_livechat(): return False
+        if self._no_livechat():
+            return False
         return self._blocker.unblock(author_id)
 
     def loop(self) -> bool:
@@ -81,7 +89,8 @@ class Watcher:
         return self._livechat.is_alive()
 
     def stop(self):
-        if self._first_run: return
+        if self._first_run:
+            return
         self._livechat.terminate()
 
     def _no_livechat(self):
@@ -93,3 +102,28 @@ class Watcher:
 
     def get_session(self):
         return self._req.session
+
+    def raise_for_status(self):
+        exc = None
+        exc = self._livechat.exception
+        if isinstance(exc, chat_exceptions.ResponseContextError):
+            raise exceptions.InvalidVideoID
+        elif any([
+            isinstance(exc, chat_exceptions.NoContents),
+            isinstance(exc, chat_exceptions.NoContinuation)
+        ]):
+            raise exceptions.ChatNotFound
+        elif any([
+            isinstance(exc, chat_exceptions.IllegalFunctionCall),
+            isinstance(exc, chat_exceptions.UnknownConnectionError),
+            isinstance(exc, chat_exceptions.RetryExceedMaxCount),
+            isinstance(exc, chat_exceptions.ReceivedUnknownContinuation),
+            isinstance(exc, chat_exceptions.FailedExtractContinuation),
+            isinstance(exc, JSONDecodeError),
+            isinstance(exc, RequestException)
+        ]):
+            raise exceptions.OtherError
+        elif isinstance(exc, chat_exceptions.ChatDataFinished):
+            raise exceptions.ChatFinished
+        elif isinstance(exc, Exception):
+            raise exc

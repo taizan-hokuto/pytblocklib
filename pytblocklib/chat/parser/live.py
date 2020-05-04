@@ -6,11 +6,7 @@ Parser of live chat JSON.
 
 import json
 from .. tokenlist import Token
-from .. exceptions import ( 
-    ResponseContextError, 
-    NoContentsException, 
-    NoContinuationsException,
-    ChatParseException )
+from .. import exceptions
 
 class Parser:
     '''
@@ -30,10 +26,11 @@ class Parser:
         
     def get_contents(self, jsn):
         if jsn is None: 
-            raise ChatParseException('Called with none JSON object.')
+            raise exceptions.IllegalFunctionCall(
+                'Called with None at JSON parameter.')
         if jsn['response']['responseContext'].get('errors'):
-            raise ResponseContextError('The video_id would be wrong,'
-                'or video is deleted or private.')
+            raise exceptions.ResponseContextError(
+                'The video_id would be wrong, or video is deleted or private.')
         contents=jsn['response'].get('continuationContents')
         self._tokendict = {"xsrf_token":jsn.get('xsrf_token'), "csn":jsn.get("csn")}
         return contents
@@ -57,11 +54,11 @@ class Parser:
 
         if contents is None:
             '''Broadcasting end or cannot fetch chat stream'''
-            raise NoContentsException('Chat data stream is empty.')
+            raise exceptions.NoContents('Chat data stream is empty.')
 
         cont = contents['liveChatContinuation']['continuations'][0]
         if cont is None:
-            raise NoContinuationsException('No Continuation')
+            raise exceptions.NoContinuation('No Continuation')
         metadata = (cont.get('invalidationContinuationData')  or
                     cont.get('timedContinuationData')         or
                     cont.get('reloadContinuationData')        or
@@ -69,12 +66,14 @@ class Parser:
                     )
         if metadata is None:
             if cont.get("playerSeekContinuationData"):
-                raise ChatParseException('Finished chat data')
+                raise exceptions.ChatDataFinished('Finished chat data')
             unknown = list(cont.keys())[0]
             if unknown:
-                raise ChatParseException(f"Received unknown continuation type:{unknown}")
+                raise exceptions.ReceivedUnknownContinuation(
+                    f"Received unknown continuation type:{unknown}")
             else:
-                raise ChatParseException('Cannot extract continuation data')
+                raise exceptions.FailedExtractContinuation(
+                    'Cannot extract continuation data')
         return self._create_data(metadata, contents)
 
     def reload_continuation(self, contents):
@@ -84,6 +83,10 @@ class Parser:
         If so, try to fetch playerSeekContinuationData. 
         This function must be run only first fetching.
         """
+        if contents is None:
+            '''Broadcasting end or cannot fetch chat stream'''
+            raise exceptions.NoContents('Chat data stream is empty.')
+
         cont = contents['liveChatContinuation']['continuations'][0]
         if cont.get("liveChatReplayContinuationData"):
             #chat data exist.
@@ -92,7 +95,7 @@ class Parser:
         init_cont = cont.get("playerSeekContinuationData")
         if init_cont:
             return init_cont.get("continuation")
-        raise ChatParseException('Finished chat data')
+        raise exceptions.ChatDataFinished('Finished chat data')
 
     def _create_data(self, metadata, contents):    
         actions = contents['liveChatContinuation'].get('actions')

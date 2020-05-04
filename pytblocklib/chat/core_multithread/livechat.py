@@ -1,4 +1,3 @@
-import requests
 import json
 import signal
 import time
@@ -6,23 +5,18 @@ import traceback
 import urllib.parse
 from concurrent.futures import CancelledError, ThreadPoolExecutor
 from queue import Queue
-from threading import  Event
+from threading import Event
 from .buffer import Buffer
 from .. import config
-from ..exceptions  import ChatParseException,IllegalFunctionCall
-from ..paramgen    import liveparam, arcparam
+from .. import exceptions
+from ..paramgen import liveparam, arcparam
 from ..parser.live import Parser
 from ..processors.default.processor import DefaultProcessor
-from ..tokenlist import TokenList, Token
-from ...http.request import HttpRequest
-
 
 MAX_RETRY = 10
 
 
 class LiveChat:
-
-    _setup_finished = False
 
     def __init__(self, video_id,
                 seektime = 0,
@@ -37,21 +31,21 @@ class LiveChat:
                 req = None,
                 tokenlist = None
                 ):
-        self._video_id  = video_id
+        self._video_id = video_id
         self._req = req
         self._logger = logger
         self._seektime = seektime
         self._processor = DefaultProcessor(tokenlist)
         if buffer is None:
-            self._buffer = Buffer(maxsize = 100)
+            self._buffer = Buffer(maxsize=100)
         else:
             self._buffer = buffer
         self._callback = callback
         self._done_callback = done_callback
         self._executor = ThreadPoolExecutor(max_workers=2)
-        self._is_alive   = True
+        self._is_alive = True
         self._is_replay = force_replay
-        self._parser = Parser(is_replay = self._is_replay)
+        self._parser = Parser(is_replay=self._is_replay)
         self._pauser = Queue()
         self._pauser.put_nowait(None)
         self._first_fetch = True
@@ -59,26 +53,27 @@ class LiveChat:
         self._topchat_only = topchat_only
         self._event = Event()
         if interruptable:
-            signal.signal(signal.SIGINT,  lambda a, b:self.terminate())
-        
+            signal.signal(signal.SIGINT, lambda a, b: self.terminate())
+        self.exception = None
+
     def start(self):
         if self._callback is None:
-            pass 
+            pass
         else:
-            self._executor.submit(self._callback_loop,self._callback)
-        listen_task = self._executor.submit(self._startlisten)
+            self._executor.submit(self._callback_loop, self._callback)
+        self.listen_task = self._executor.submit(self._startlisten)
         if self._done_callback is None:
-            listen_task.add_done_callback(self.finish)
+            self.listen_task.add_done_callback(self._finish)
         else:
-            listen_task.add_done_callback(self._done_callback)
+            self.listen_task.add_done_callback(self._done_callback)
 
     def _startlisten(self):
-        #sleep shortly to prohibit skipping fetching data
-        time.sleep(0.1)  
+        # sleep shortly to prohibit skipping fetching data
+        time.sleep(0.1)
         """Fetch first continuation parameter,
         create and start _listen loop.
         """
-        initial_continuation = liveparam.getparam(self._video_id,3)
+        initial_continuation = liveparam.getparam(self._video_id, 3)
         self._listen(initial_continuation)
 
     def _listen(self, continuation):
@@ -95,27 +90,28 @@ class LiveChat:
                 while(continuation and self._is_alive):
                     continuation = self._check_pause(continuation)
                     contents = self._get_contents(continuation, session)
-                    metadata, chatdata =  self._parser.parse(contents)
+                    metadata, chatdata = self._parser.parse(contents)
                     timeout = metadata['timeoutMs']/1000
                     chat_component = {
-                        "video_id" : self._video_id,
-                        "timeout"  : timeout,
-                        "chatdata" : chatdata,
-                        "tokendict" : metadata.get("tokendict")
+                        "video_id": self._video_id,
+                        "timeout": timeout,
+                        "chatdata": chatdata,
+                        "tokendict": metadata.get("tokendict")
                     }
-                    time_mark =time.time()
+                    time_mark = time.time()
                     self._buffer.put(chat_component)
                     diff_time = timeout - (time.time()-time_mark)
                     self._event.wait(diff_time if diff_time > 0 else 0)
                     continuation = metadata.get('continuation')  
-        except ChatParseException as e:
+        except exceptions.ChatParseException as e:
             self._logger.debug(f"[{self._video_id}]{str(e)}")
-            return            
-        except (TypeError , json.JSONDecodeError) :
+            raise
+        except (TypeError, json.JSONDecodeError):
             self._logger.error(f"{traceback.format_exc(limit = -1)}")
-            return
-        
+            raise
+
         self._logger.debug(f"[{self._video_id}]finished fetching chat.")
+        raise exceptions.ChatDataFinished
 
     def _check_pause(self, continuation):
         if self._pauser.empty():
@@ -126,7 +122,7 @@ class LiveChat:
             '''
             self._pauser.put_nowait(None)
             if not self._is_replay:
-                continuation = liveparam.getparam(self._video_id,3)
+                continuation = liveparam.getparam(self._video_id, 3)
         return continuation
 
     def _get_contents(self, continuation, session):
@@ -174,16 +170,16 @@ class LiveChat:
                     text = resp.text
                     livechat_json = json.loads(text)
                     break
-                except json.JSONDecodeError :
+                except json.JSONDecodeError:
                     time.sleep(1)
                     continue
         else:
             self._logger.error(f"[{self._video_id}]"
-                    f"Exceeded retry count. status_code={status_code}")
-            return None
+                f"Exceeded retry count. status_code={status_code}")
+            raise exceptions.RetryExceedMaxCount()
         return livechat_json
   
-    def _callback_loop(self,callback):
+    def _callback_loop(self, callback):
         """ コンストラクタでcallbackを指定している場合、バックグラウンドで
         callbackに指定された関数に一定間隔でチャットデータを投げる。        
         
@@ -203,17 +199,17 @@ class LiveChat:
     def get(self):
         """ bufferからデータを取り出し、processorに投げ、
         加工済みのチャットデータを返す。
-        
+
         Returns
              : Processorによって加工されたチャットデータ
         """
         if self._callback is None:
             if self.is_alive():
                 items = self._buffer.get()
-                return  self._processor.process(items)
+                return self._processor.process(items)
             else:
                 return []
-        raise IllegalFunctionCall(
+        raise exceptions.IllegalFunctionCall(
             "既にcallbackを登録済みのため、get()は実行できません。")
 
     def is_replay(self):
@@ -230,23 +226,32 @@ class LiveChat:
             return
         if self._pauser.empty():
             self._pauser.put_nowait(None)
-        
+
     def is_alive(self):
         return self._is_alive
 
-    def finish(self,sender):
+    def _finish(self, sender):
         '''Listener終了時のコールバック'''
-        try: 
-            self.terminate()
+        try:
+            self._task_finished()
         except CancelledError:
             self._logger.debug(f'[{self._video_id}]cancelled:{sender}')
 
     def terminate(self):
+        self._is_alive = False
+        self._buffer.put({})
+        self._event.set()
+
+    def _task_finished(self):
         '''
         Listenerを終了する。
         '''
         if self.is_alive():
-            self._is_alive = False
-            self._buffer.put({})
-            self._event.set()
-            self._logger.info(f'[{self._video_id}]終了しました')
+            self.terminate()
+            try:
+                self.listen_task.result()
+            except Exception as e:
+                self.exception = e
+                if not isinstance(e, exceptions.ChatParseException):
+                    self._logger.error(f'Internal exception - {type(e)}{str(e)}')
+        self._logger.info(f'[{self._video_id}]終了しました')

@@ -54,6 +54,7 @@ class DefaultProcessor:
         if item.get("liveChatPaidMessageRenderer") or \
            item.get("liveChatPaidStickerRenderer"):
             return LiveChatPaidMessageRenderer(item)
-        if item.get("liveChatLegacyPaidMessageRenderer"):
+        if item.get("liveChatMembershipItemRenderer") or \
+           item.get("liveChatLegacyPaidMessageRenderer"):
             return LiveChatLegacyPaidMessageRenderer(item)
         return None
