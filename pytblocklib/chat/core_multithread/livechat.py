@@ -58,12 +58,12 @@ class LiveChat:
 
     def start(self):
         if self._callback is None:
-            pass 
+            pass
         else:
             self._executor.submit(self._callback_loop, self._callback)
         self.listen_task = self._executor.submit(self._startlisten)
         if self._done_callback is None:
-            self.listen_task.add_done_callback(self.finish)
+            self.listen_task.add_done_callback(self._finish)
         else:
             self.listen_task.add_done_callback(self._done_callback)
 
@@ -109,7 +109,7 @@ class LiveChat:
         except (TypeError, json.JSONDecodeError):
             self._logger.error(f"{traceback.format_exc(limit = -1)}")
             raise
-        
+
         self._logger.debug(f"[{self._video_id}]finished fetching chat.")
         raise exceptions.ChatDataFinished
 
@@ -199,7 +199,7 @@ class LiveChat:
     def get(self):
         """ bufferからデータを取り出し、processorに投げ、
         加工済みのチャットデータを返す。
-        
+
         Returns
              : Processorによって加工されたチャットデータ
         """
@@ -226,29 +226,32 @@ class LiveChat:
             return
         if self._pauser.empty():
             self._pauser.put_nowait(None)
-        
+
     def is_alive(self):
         return self._is_alive
 
-    def finish(self, sender):
+    def _finish(self, sender):
         '''Listener終了時のコールバック'''
-        try: 
-            self.terminate()
+        try:
+            self._task_finished()
         except CancelledError:
             self._logger.debug(f'[{self._video_id}]cancelled:{sender}')
 
     def terminate(self):
+        self._is_alive = False
+        self._buffer.put({})
+        self._event.set()
+
+    def _task_finished(self):
         '''
         Listenerを終了する。
         '''
         if self.is_alive():
+            self.terminate()
             try:
                 self.listen_task.result()
             except Exception as e:
                 self.exception = e
-                if not isinstance(e, exceptions.ChatDataFinished):
-                    self._logger.error(f'Internal exception - {traceback.format_exc(limit = -1)}')
-            self._is_alive = False
-            self._buffer.put({})
-            self._event.set()
-            self._logger.info(f'[{self._video_id}]終了しました')
+                if not isinstance(e, exceptions.ChatParseException):
+                    self._logger.error(f'Internal exception - {type(e)}{str(e)}')
+        self._logger.info(f'[{self._video_id}]終了しました')
