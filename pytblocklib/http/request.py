@@ -1,9 +1,7 @@
 import json
 import requests
-import urllib
 from ..util import get_item
 from ..config import config
-import sys
 from .. import browser_cookie3
 
 path_params = [
@@ -12,6 +10,7 @@ path_params = [
     "serviceTrackingParams", 3,
     "params"
 ]
+
 
 class HttpRequest:
 
@@ -61,19 +60,19 @@ class HttpRequest:
         if resp.status_code != 200:
             return False
         try:
-            resp_json= json.loads(resp.text)
+            resp_json = json.loads(resp.text)
         except json.JSONDecodeError:
             return False
         items = get_item(resp_json, path_params)
         if items:
-            params={}
+            params = {}
             for param in items:
-                params[param.get("key")]=param.get("value")
+                params[param.get("key")] = param.get("value")
             
             self.headers.update({'x-youtube-client-name': "1"})
-            self.headers.update({'x-youtube-client-version' : params["client.version"]})
+            self.headers.update({'x-youtube-client-version': params["client.version"]})
             self.headers.update({'x-youtube-variants-checksum': params["innertube.build.variants.checksum"]})
-            self.headers.update({'x-youtube-page-cl' : params["innertube.build.experiments.source_version"]})
+            self.headers.update({'x-youtube-page-cl': params["innertube.build.experiments.source_version"]})
             return True
         return False
             
